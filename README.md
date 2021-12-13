@@ -61,11 +61,13 @@ Overall logic Summary:
             - Current date
             - Current price
             - \# trades made
+            - Start time # set by strat, referenced by stepping func 
+            - End time # set by strat, referenced by stepping func
             - A dataframe of returns over time
                 - \# of ETH
                 - \# of USD
                 - Total value in USD
-                - % gain from starting USD
+                - % return from starting USD
             - Price/Time stepping function
             - Sell function, takes in (amount) and uses current price
             - Buy function, takes in (amount) and uses current price
