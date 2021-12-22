@@ -1,0 +1,27 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"python.pythonPath": "${workspaceFolder}",
+		"python.linting.pylintArgs": [
+			"--max-line-length=120",
+			"--disable=import-error"
+		]
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Python: Current File",
+				"type": "python",
+				"request": "launch",
+				"program": "${file}",
+				"console": "integratedTerminal",
+				"env": {"PYTHONPATH": "${workspaceFolder}"}
+			}
+		]
+	}
+}

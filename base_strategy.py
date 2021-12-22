@@ -1,4 +1,7 @@
-# Base strategy class
+"""
+Base strategy class.
+Gets inherited by specific strategies.
+"""
 import pandas as pd
 
 class strategy:
@@ -10,8 +13,8 @@ class strategy:
         self.price_period_name = price_period_name
         # Holds the historical price data
         self.price_df = price_df
-        self.start_time = price_df['timestamp'].iloc[0]
-        self.end_time = price_df['timestamp'].iloc[-1]
+        self.start_time = int(price_df['timestamp'].iloc[0])
+        self.end_time = int(price_df['timestamp'].iloc[-1])
         # Index of price_df
         self.current_index = 0
         # This will be in timestamp units. Time between when the strategy will check if it wants to buy or sell.
@@ -21,16 +24,18 @@ class strategy:
         # We assume that no eth is currently held
         self.current_eth = 0
         self.current_time = self.start_time
+        # Total value in USD
+        self.total_value = starting_usd
         # Get price at the first time period
-        self.current_price = None
+        self.current_price = price_df['price'].iloc[0]
         self.trades_made = 0
         self.returns_df = pd.DataFrame(
             {
-                'Time':self.start_time,
-                '# of USD':starting_usd,
-                '# of ETH':0,
-                'Total Value':starting_usd,
-                '% Return':0
+                'Time': [self.start_time],
+                '# of USD': [starting_usd],
+                '# of ETH': [0],
+                'Total Value': [self.total_value],
+                '% Return': [0]
             },
             columns=[
                 'Time',
@@ -60,26 +65,59 @@ class strategy:
         # TODO - Create price column as average of high and low? Not perfect but good enough.
         self.current_price = self.price_df['price'].iloc[self.current_index]
 
-    def buy_eth(self, eth_to_buy):
+    def add_to_returns(self):
+        """
+        Called on buy or sell. Adds current values to returns df.
+        """
+        new_row = {
+            'Time': self.current_time,
+            '# of USD': self.current_usd,
+            '# of ETH': self.current_eth,
+            'Total Value': self.total_value,
+            '% Return': (self.total_value*100.0/self.starting_usd)-100.0
+        }
+        self.returns_df = self.returns_df.append(new_row, ignore_index=True)
+        self.trades_made += 1
+        # print(f'returns:\n{self.returns_df}')
+
+    def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
         """
         Buy ETH with USD.
-        Raises ValueError if the action would result in negative USD.
+        Raises ValueError if the action would result in negative USD or there are bad inputs.
         """
-        self.current_eth += eth_to_buy
-        self.current_usd -= eth_to_buy*self.current_price
-        if self.current_usd < 0:
+        if eth_to_buy == 0 and usd_eth_to_buy == 0:
+            raise ValueError("Must buy non-zero amounts")
+        if eth_to_buy != 0 and usd_eth_to_buy != 0:
+            raise ValueError("Only supply USD amount or ETH amount, not both.")
+        # If we are supplied eth amounts, convert to USD amounts to allow for standardization.
+        if eth_to_buy != 0:
+            usd_eth_to_buy = eth_to_buy*self.current_price
+
+        if self.current_usd-usd_eth_to_buy < 0:
             raise ValueError(
                 'Current USD cannot be negative. There is a logic error in this strategy.'
             )
+        self.current_eth += usd_eth_to_buy/self.current_price
+        self.current_usd -= usd_eth_to_buy
+        # Update returns even though it will be net zero to show that a transaction was done.
+        self.add_to_returns()
 
-    def sell_eth(self, eth_to_sell):
+    def sell_eth(self, eth_to_sell=0, usd_eth_to_sell=0):
         """
         Sell ETH for USD.
-        Raises ValueError if the action would result in negative ETH.
+        Raises ValueError if the action would result in negative ETH or there are bad inputs.
         """
-        self.current_eth -= eth_to_sell
-        self.current_usd += eth_to_sell*self.current_price
-        if self.current_eth < 0:
+        if eth_to_sell == 0 and usd_eth_to_sell == 0:
+            raise ValueError("Must sell non-zero amounts")
+        if eth_to_sell != 0 and usd_eth_to_sell != 0:
+            raise ValueError("Only supply USD amount or ETH amount, not both.")
+        # If we are supplied usd amounts, convert to eth amounts to keep things simple.
+        if usd_eth_to_sell != 0:
+            eth_to_sell = usd_eth_to_sell/self.current_price
+
+        if self.current_eth-eth_to_sell < 0:
             raise ValueError(
                 'Current ETH cannot be negative. There is a logic error in this strategy.'
             )
+        self.current_eth -= eth_to_sell
+        self.current_usd += eth_to_sell*self.current_price
