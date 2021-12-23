@@ -121,3 +121,6 @@ class strategy:
             )
         self.current_eth -= eth_to_sell
         self.current_usd += eth_to_sell*self.current_price
+
+        # Update returns
+        self.add_to_returns()
