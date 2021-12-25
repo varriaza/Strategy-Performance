@@ -130,7 +130,7 @@ def test_run_logic():
     assert failed
 
 # def test_go_to_next_action():
-    # TODO - Add nest after time test is created
+    # TODO - Add test after time test is created
 
 def setup_buy_and_sell_strat():
     """

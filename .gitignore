@@ -1,6 +1,6 @@
 # User files
 full_data*
-test*.csv
+csv_files/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
