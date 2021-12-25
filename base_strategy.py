@@ -24,8 +24,6 @@ class strategy:
         # We assume that no eth is currently held
         self.current_eth = 0
         self.current_time = self.start_time
-        # Total value in USD
-        self.total_value = starting_usd
         # Get price at the first time period
         self.current_price = price_df['price'].iloc[0]
         self.trades_made = 0
@@ -34,7 +32,7 @@ class strategy:
                 'Time': [self.start_time],
                 '# of USD': [starting_usd],
                 '# of ETH': [0],
-                'Total Value': [self.total_value],
+                'Total Value': [self.get_total_value()],
                 '% Return': [0]
             },
             columns=[
@@ -62,8 +60,22 @@ class strategy:
         while self.current_time < stepping_start+self.time_between_action:
             self.current_index += 1
             self.current_time = self.price_df['timestamp'].iloc[self.current_index]
-        # TODO - Create price column as average of high and low? Not perfect but good enough.
-        self.current_price = self.price_df['price'].iloc[self.current_index]
+            # Update price so we can update total value/total returns
+            self.current_price = self.price_df['price'].iloc[self.current_index]
+            # Update returns
+            self.add_to_returns
+
+    def get_total_value(self):
+        """
+        Returns the total USD+ETH portfolio value in USD
+        """
+        return self.current_usd + (self.current_eth/self.current_price)
+
+    def get_returns(self):
+        """
+        Returns % returns since the start of the time period.
+        """
+        return (self.get_total_value()*100.0/self.starting_usd)-100.0
 
     def add_to_returns(self):
         """
@@ -73,11 +85,10 @@ class strategy:
             'Time': self.current_time,
             '# of USD': self.current_usd,
             '# of ETH': self.current_eth,
-            'Total Value': self.total_value,
-            '% Return': (self.total_value*100.0/self.starting_usd)-100.0
+            'Total Value': self.get_total_value(),
+            '% Return': self.get_returns()
         }
         self.returns_df = self.returns_df.append(new_row, ignore_index=True)
-        self.trades_made += 1
         # print(f'returns:\n{self.returns_df}')
 
     def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
@@ -99,6 +110,7 @@ class strategy:
             )
         self.current_eth += usd_eth_to_buy/self.current_price
         self.current_usd -= usd_eth_to_buy
+        self.trades_made += 1
         # Update returns even though it will be net zero to show that a transaction was done.
         self.add_to_returns()
 
@@ -122,5 +134,4 @@ class strategy:
         self.current_eth -= eth_to_sell
         self.current_usd += eth_to_sell*self.current_price
 
-        # Update returns
-        self.add_to_returns()
+        self.trades_made += 1
