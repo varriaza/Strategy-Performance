@@ -95,7 +95,7 @@ def test_init():
     # We assume that no eth is currently held
     assert testing_strat.current_eth == 0
     assert testing_strat.current_time == testing_strat.start_time
-    assert testing_strat.total_value == testing_strat.starting_usd
+    assert testing_strat.get_total_value() == testing_strat.starting_usd
     # Get price at the first time period
     assert testing_strat.current_price == price_df['price'].iloc[0]
     assert testing_strat.trades_made == 0
@@ -104,8 +104,8 @@ def test_init():
             'Time':[testing_strat.start_time],
             '# of USD':[starting_usd],
             '# of ETH':[0],
-            'Total Value':[testing_strat.total_value],
-            '% Return':[0]
+            'Total Value':[testing_strat.get_total_value()],
+            '% Return':[testing_strat.get_returns()]
         },
         columns=[
             'Time',
@@ -153,26 +153,67 @@ def test_buy_usd_eth():
     starting_usd = test_strat.current_usd
     starting_eth = test_strat.current_eth
     starting_trade_num = test_strat.trades_made
-    starting_total_value = test_strat.total_value
+    starting_total_value = test_strat.get_total_value()
     test_strat.buy_eth(usd_eth_to_buy=usd_buy)
 
     # assert ending USD = start-buy
     assert test_strat.current_usd == starting_usd-usd_buy
-    ## assert ending ETH = start+buy
+    # assert ending ETH = start+buy
     assert test_strat.current_eth == starting_eth + (usd_buy/test_strat.current_price)
-    ## assert total value doesn't change when buying
-    assert test_strat.total_value == starting_total_value
-    ## assert trades_made is incremented by 1
+    # assert total value doesn't change when buying
+    assert test_strat.get_total_value() == starting_total_value
+    # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-    ## assert returns_df has correct info
-    expected_returns_df = pd.DataFrame({
-        'Time': [test_strat.current_time],
-        '# of USD': [starting_usd-usd_buy],
-        '# of ETH': [starting_eth + (usd_buy/test_strat.current_price)],
-        'Total Value': [starting_total_value],
-        '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    })
-    assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+    # TODO - Move this elsewhere
+    # # assert returns_df has correct info
+    # expected_returns_df = pd.DataFrame({
+    #     'Time': [test_strat.current_time],
+    #     '# of USD': [starting_usd-usd_buy],
+    #     '# of ETH': [starting_eth + (usd_buy/test_strat.current_price)],
+    #     'Total Value': [starting_total_value],
+    #     '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
+    # })
+    # assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+
+def test_get_total_value():
+    """
+    Test that total value is calculated correctly.
+    """
+    test_strat = setup_buy_and_sell_strat()
+    test_strat.current_usd = 100.0
+    test_strat.current_eth = 1.0
+    test_strat.current_price = 25.0
+    assert compare(test_strat.get_total_value(), 125.0)
+
+    test_strat.current_usd = 113.41
+    test_strat.current_eth = 3.51023
+    test_strat.current_price = 5135.12305
+    assert compare(test_strat.get_total_value(), round(113.41+(3.51023*5135.12305), 2))
+
+def test_get_returns():
+    """
+    Test that the current return % value is calculated correctly
+    """
+    test_strat = setup_buy_and_sell_strat()
+    test_strat.starting_usd = 10.0
+    test_strat.current_usd = 20.0
+    test_strat.current_eth = 0.0
+    test_strat.current_price = 20.0
+    assert compare(test_strat.get_returns(), 100.0)
+
+    test_strat.starting_usd = 10.0
+    test_strat.current_usd = 20.0
+    test_strat.current_eth = 1.0
+    test_strat.current_price = 10.0
+    assert compare(test_strat.get_returns(), 200.0)
+
+    test_strat.starting_usd = 1000.0
+    test_strat.current_usd = 1267.52
+    test_strat.current_eth = 6.839087
+    test_strat.current_price = 6439.872035
+    # print(f'Total value is: {test_strat.get_total_value()}')
+    assert compare(test_strat.get_returns(), 4431.037)
+
 
 def test_buy_eth():
     """
@@ -183,26 +224,28 @@ def test_buy_eth():
     starting_usd = test_strat.current_usd
     starting_eth = test_strat.current_eth
     starting_trade_num = test_strat.trades_made
-    starting_total_value = test_strat.total_value
+    starting_total_value = test_strat.get_total_value()
     test_strat.buy_eth(eth_to_buy=eth_buy)
 
     # assert ending USD = start-buy
     assert test_strat.current_usd == starting_usd-(eth_buy*test_strat.current_price)
-    ## assert ending ETH = start+buy
+    # assert ending ETH = start+buy
     assert test_strat.current_eth == starting_eth + eth_buy
-    ## assert total value doesn't change when buying
-    assert test_strat.total_value == starting_total_value
-    ## assert trades_made is incremented by 1
+    # assert total value doesn't change when buying
+    assert test_strat.get_total_value() == starting_total_value
+    # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-    ## assert returns_df has correct info
-    expected_returns_df = pd.DataFrame({
-        'Time': [test_strat.current_time],
-        '# of USD': [starting_usd-(eth_buy*test_strat.current_price)],
-        '# of ETH': [starting_eth + eth_buy],
-        'Total Value': [starting_total_value],
-        '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    })
-    assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+
+    # TODO - Move elsewhere
+    # # assert returns_df has correct info
+    # expected_returns_df = pd.DataFrame({
+    #     'Time': [test_strat.current_time],
+    #     '# of USD': [starting_usd-(eth_buy*test_strat.current_price)],
+    #     '# of ETH': [starting_eth + eth_buy],
+    #     'Total Value': [starting_total_value],
+    #     '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
+    # })
+    # assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
 
 def test_buy_too_much():
     """
@@ -281,7 +324,7 @@ def test_sell_usd_eth():
     starting_usd = test_strat.current_usd
     starting_eth = test_strat.current_eth
     starting_trade_num = test_strat.trades_made
-    starting_total_value = test_strat.total_value
+    starting_total_value = test_strat.get_total_value()
     test_strat.sell_eth(usd_eth_to_sell=usd_sell)
 
     # assert ending USD = start+sell
@@ -290,18 +333,9 @@ def test_sell_usd_eth():
     assert test_strat.current_eth == starting_eth - (usd_sell/test_strat.current_price)
     # assert total value doesn't change when selling
     # This check is only to make sure no value is lost on a transaction
-    assert test_strat.total_value == starting_total_value
+    assert test_strat.get_total_value() == starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-    # assert returns_df has correct info
-    expected_returns_df = pd.DataFrame({
-        'Time': [test_strat.current_time],
-        '# of USD': [starting_usd+usd_sell],
-        '# of ETH': [starting_eth - (usd_sell/test_strat.current_price)],
-        'Total Value': [starting_total_value],
-        '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    })
-    assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
 
 def test_sell_eth():
     """
@@ -312,7 +346,7 @@ def test_sell_eth():
     starting_usd = test_strat.current_usd
     starting_eth = test_strat.current_eth
     starting_trade_num = test_strat.trades_made
-    starting_total_value = test_strat.total_value
+    starting_total_value = test_strat.get_total_value()
     test_strat.sell_eth(eth_to_sell=eth_sell)
 
     # assert ending USD = start+sell
@@ -321,19 +355,9 @@ def test_sell_eth():
     assert test_strat.current_eth == starting_eth - eth_sell
     # assert total value doesn't change when selling
     # This check is only to make sure no value is lost on a transaction
-    assert test_strat.total_value == starting_total_value
+    assert test_strat.get_total_value() == starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-    # assert returns_df has correct info
-    expected_returns_df = pd.DataFrame({
-        'Time': [test_strat.current_time],
-        '# of USD': [starting_usd+(eth_sell*test_strat.current_price)],
-        '# of ETH': [starting_eth - eth_sell],
-        'Total Value': [starting_total_value],
-        '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    })
-    assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
-
 
 def test_sell_too_much():
     """

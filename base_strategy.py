@@ -33,7 +33,7 @@ class strategy:
                 '# of USD': [starting_usd],
                 '# of ETH': [0],
                 'Total Value': [self.get_total_value()],
-                '% Return': [0]
+                '% Return': [self.get_returns()]
             },
             columns=[
                 'Time',
@@ -63,13 +63,13 @@ class strategy:
             # Update price so we can update total value/total returns
             self.current_price = self.price_df['price'].iloc[self.current_index]
             # Update returns
-            self.add_to_returns
+            self.add_to_returns()
 
     def get_total_value(self):
         """
         Returns the total USD+ETH portfolio value in USD
         """
-        return self.current_usd + (self.current_eth/self.current_price)
+        return round(self.current_usd + (self.current_eth*self.current_price), 2)
 
     def get_returns(self):
         """
