@@ -4,9 +4,12 @@ Gets inherited by specific strategies.
 """
 import pandas as pd
 
+class LoopComplete(Exception):
+    pass
+
 class Strategy:
     """Base strategy class, specific strategies should inherent this."""
-    def __init__(self, name, starting_usd, time_between_action, price_period_name, price_df) -> None:
+    def __init__(self, name, starting_usd, time_between_action, price_period_name, price_df, starting_eth = 0) -> None:
         # Name of the strategy
         self.name = name
         # Name of the price period given
@@ -17,21 +20,25 @@ class Strategy:
         self.end_time = int(price_df['timestamp'].iloc[-1])
         # Index of price_df
         self.current_index = 0
-        # This will be in timestamp units. Time between when the strategy will check if it wants to buy or sell.
+        # This will be in timestamp units (aka seconds). 
+        # Time between when the strategy will check if it wants to buy or sell.
+        # Each data point is collected 60 seconds apart
         self.time_between_action = time_between_action
         self.starting_usd = starting_usd
+        self.starting_eth = starting_eth
         self.current_usd = starting_usd
         # We assume that no eth is currently held
-        self.current_eth = 0
+        self.current_eth = starting_eth
         self.current_time = self.start_time
         # Get price at the first time period
         self.current_price = price_df['price'].iloc[0]
+        self.starting_total_value = starting_usd + (starting_eth*self.current_price)
         self.trades_made = 0
         self.returns_df = pd.DataFrame(
             {
                 'Time': [self.start_time],
                 '# of USD': [starting_usd],
-                '# of ETH': [0],
+                '# of ETH': [starting_eth],
                 'Total Value': [self.get_total_value()],
                 '% Return': [self.get_returns()]
             },
@@ -54,16 +61,21 @@ class Strategy:
     def go_to_next_action(self):
         """
         Move time forward until the next buy period.
+        Raise LoopComplete when we reach the last index.
         """
         stepping_start = self.current_time
         # Loop until we find a value past our time+delta time.
         while self.current_time < stepping_start+self.time_between_action:
+            # Update returns before we step to capture buys and sells done in current time
+            self.add_to_returns()
             self.current_index += 1
+            # Stop looping and show the strategy we are finished when we try to go past the last index.
+            if self.current_index > self.price_df.index[-1]:
+                raise LoopComplete('All done')
             self.current_time = self.price_df['timestamp'].iloc[self.current_index]
             # Update price so we can update total value/total returns
             self.current_price = self.price_df['price'].iloc[self.current_index]
-            # Update returns
-            self.add_to_returns()
+            
 
     def get_total_value(self):
         """
@@ -75,7 +87,7 @@ class Strategy:
         """
         Returns % returns since the start of the time period.
         """
-        return (self.get_total_value()*100.0/self.starting_usd)-100.0
+        return (self.get_total_value()*100.0/self.starting_total_value)-100.0
 
     def add_to_returns(self):
         """
@@ -89,7 +101,6 @@ class Strategy:
             '% Return': self.get_returns()
         }
         self.returns_df = self.returns_df.append(new_row, ignore_index=True)
-        # print(f'returns:\n{self.returns_df}')
 
     def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
         """
@@ -111,8 +122,6 @@ class Strategy:
         self.current_eth += usd_eth_to_buy/self.current_price
         self.current_usd -= usd_eth_to_buy
         self.trades_made += 1
-        # Update returns even though it will be net zero to show that a transaction was done.
-        self.add_to_returns()
 
     def sell_eth(self, eth_to_sell=0, usd_eth_to_sell=0):
         """

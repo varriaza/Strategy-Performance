@@ -21,7 +21,10 @@ def compare_df(df1, df2):
     """
     if not df1.equals(df2):
         print(f'df1: {df1}')
+        print('---')
         print(f'df2: {df2}')
+        print('---')
+        print(df1.where(df1.values==df2.values).notna())
     return df1.equals(df2)
 
 def create_strat_class():
@@ -131,15 +134,15 @@ def test_run_logic():
 
 def test_go_to_next_action():
     """
-    Test that the time stepping function works.
+    Test that the time stepping function works and that total value/price is updated correctly.
     """
     # Variable setup
     name = 'Testing'
     starting_usd = 100.0
-    time_between_action = 5
-    price_period_name = 'test_period'
-    price_df = pd.read_csv('csv_files\\test.csv', index_col='index')
-    # price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'price':[1,2,3,4,5]})
+    time_between_action = 1
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(f'csv_files\\{price_file_name}', index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -149,7 +152,118 @@ def test_go_to_next_action():
         price_period_name=price_period_name,
         price_df=price_df
     )
-    # TODO - Finish
+    # Give the strategy 1 eth for testing
+    testing_strat.current_eth = 1
+
+    # Collect data before we step
+    old_time = testing_strat.current_time
+    old_price = testing_strat.current_price
+    old_index = testing_strat.current_index
+    old_total = testing_strat.get_total_value()
+    start_time = testing_strat.start_time
+
+    # Make sure we are at the beggining
+    assert start_time == testing_strat.current_time
+
+    # Step forward twice in time as returns_df is in the past by 1 index
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+
+    # Test that time is updated when stepped
+    assert int(testing_strat.current_time) == 1514880180
+    assert int(old_time)+120 == int(testing_strat.current_time)
+    # Test that price updates
+    assert old_price != testing_strat.current_price
+    assert testing_strat.current_price == 849.2925
+    # Test that total value updates
+    # Total must increase as price goes from 849.4812499999999 to 849.2925
+    assert old_total > testing_strat.get_total_value()
+
+    # Test that index updates
+    assert old_index == 0
+    assert testing_strat.current_index == 2
+    # Test that retruns_df updates
+    expected_returns_df = pd.DataFrame({
+        'Time': [1514880120.0],
+        '# of USD': [testing_strat.starting_usd],
+        '# of ETH': [1],
+        'Total Value': [949.65],
+        '% Return': [(949.65*100.0/testing_strat.starting_usd)-100.0]
+    })
+    # print(f'Time real: {testing_strat.returns_df["Time"].iloc[-1]}')
+    # print(f'Time ex:   {expected_returns_df["Time"].iloc[-1]}')
+    # print(f'Total_val real: {testing_strat.returns_df["Total Value"].iloc[-1]}')
+    # print(f'Total_val ex: {expected_returns_df["Total Value"].iloc[-1]}')
+    # print(f'Return real: {testing_strat.returns_df["% Return"].iloc[-1]}')
+    # print(f'Return ex: {expected_returns_df["% Return"].iloc[-1]}')
+    assert compare_df(testing_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+
+def test_go_to_next_action_big_skip():
+    """
+    Test that skipping large amounts of time works as expected.
+    """
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100.0
+    # Skip ahead 9 minutes
+    time_between_action = 60*9
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(f'csv_files\\{price_file_name}', index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+    # Give the strategy 1 eth for testing
+    testing_strat.current_eth = 1
+    
+    # Collect data before we step
+    old_time = testing_strat.current_time
+    old_price = testing_strat.current_price
+    old_index = testing_strat.current_index
+    start_time = testing_strat.start_time
+
+    # Make sure we are at the beggining
+    assert start_time == testing_strat.current_time
+
+    # Step forward in time
+    testing_strat.go_to_next_action()
+
+    # Test that time is updated when stepped
+    assert int(testing_strat.current_time) == 1514880600
+    assert int(old_time)+(60*9) == int(testing_strat.current_time)
+    # Test that price updates
+    assert old_price != testing_strat.current_price
+    assert testing_strat.current_price == 849.4662500000001
+    # Test that total value updates
+    # Total should match exactly
+    assert testing_strat.get_total_value() == round(949.4662500000001, 2)
+
+    # Test that index updates
+    assert old_index == 0
+    assert testing_strat.current_index == 9
+    # Test that retruns_df updates
+    expected_returns_df = pd.DataFrame({
+        'Time': [1514880540],
+        '# of USD': [testing_strat.starting_usd],
+        '# of ETH': [1],
+        'Total Value': [round(949.6975, 2)],
+        '% Return': [(round(949.6975, 2)*100.0/testing_strat.starting_usd)-100.0]
+    })
+    # print(f'Time real: {testing_strat.returns_df["Time"].iloc[-1]}')
+    # print(f'Time ex:   {expected_returns_df["Time"].iloc[-1]}')
+    # print(f'Total_val real: {testing_strat.returns_df["Total Value"].iloc[-1]}')
+    # print(f'Total_val ex: {expected_returns_df["Total Value"].iloc[-1]}')
+    # print(f'Return real: {testing_strat.returns_df["% Return"].iloc[-1]}')
+    # print(f'Return ex: {expected_returns_df["% Return"].iloc[-1]}')
+    assert compare_df(testing_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+    # Make sure we have 9 NEW entries in returns_df (one for each minute) + 1 starting entry
+    assert len(testing_strat.returns_df.index) == 10
 
 def setup_buy_and_sell_strat():
     """
@@ -183,16 +297,6 @@ def test_buy_usd_eth():
     assert test_strat.get_total_value() == starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-    # TODO - Move this elsewhere
-    # # assert returns_df has correct info
-    # expected_returns_df = pd.DataFrame({
-    #     'Time': [test_strat.current_time],
-    #     '# of USD': [starting_usd-usd_buy],
-    #     '# of ETH': [starting_eth + (usd_buy/test_strat.current_price)],
-    #     'Total Value': [starting_total_value],
-    #     '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    # })
-    # assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
 
 def test_get_total_value():
     """
@@ -217,16 +321,19 @@ def test_get_returns():
     test_strat.starting_usd = 10.0
     test_strat.current_usd = 20.0
     test_strat.current_eth = 0.0
+    test_strat.starting_total_value = test_strat.starting_usd
     test_strat.current_price = 20.0
     assert compare(test_strat.get_returns(), 100.0)
 
     test_strat.starting_usd = 10.0
+    test_strat.starting_total_value = test_strat.starting_usd
     test_strat.current_usd = 20.0
     test_strat.current_eth = 1.0
     test_strat.current_price = 10.0
     assert compare(test_strat.get_returns(), 200.0)
 
     test_strat.starting_usd = 1000.0
+    test_strat.starting_total_value = test_strat.starting_usd
     test_strat.current_usd = 1267.52
     test_strat.current_eth = 6.839087
     test_strat.current_price = 6439.872035
@@ -254,17 +361,6 @@ def test_buy_eth():
     assert test_strat.get_total_value() == starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
-
-    # TODO - Move elsewhere
-    # # assert returns_df has correct info
-    # expected_returns_df = pd.DataFrame({
-    #     'Time': [test_strat.current_time],
-    #     '# of USD': [starting_usd-(eth_buy*test_strat.current_price)],
-    #     '# of ETH': [starting_eth + eth_buy],
-    #     'Total Value': [starting_total_value],
-    #     '% Return': [(starting_total_value*100.0/test_strat.starting_usd)-100.0]
-    # })
-    # assert compare_df(test_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
 
 def test_buy_too_much():
     """
