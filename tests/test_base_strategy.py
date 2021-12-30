@@ -176,7 +176,7 @@ def test_go_to_next_action():
     assert old_price != testing_strat.current_price
     assert testing_strat.current_price == 849.2925
     # Test that total value updates
-    # Total must increase as price goes from 849.4812499999999 to 849.2925
+    # Total must decrease as price goes from 849.4812499999999 to 849.2925
     assert old_total > testing_strat.get_total_value()
 
     # Test that index updates
@@ -190,13 +190,38 @@ def test_go_to_next_action():
         'Total Value': [949.65],
         '% Return': [(949.65*100.0/testing_strat.starting_usd)-100.0]
     })
-    # print(f'Time real: {testing_strat.returns_df["Time"].iloc[-1]}')
-    # print(f'Time ex:   {expected_returns_df["Time"].iloc[-1]}')
-    # print(f'Total_val real: {testing_strat.returns_df["Total Value"].iloc[-1]}')
-    # print(f'Total_val ex: {expected_returns_df["Total Value"].iloc[-1]}')
-    # print(f'Return real: {testing_strat.returns_df["% Return"].iloc[-1]}')
-    # print(f'Return ex: {expected_returns_df["% Return"].iloc[-1]}')
     assert compare_df(testing_strat.returns_df.iloc[-1],expected_returns_df.iloc[-1])
+
+def test_go_to_end():
+    """
+    Test that when we try to go past the last index LoopComplete is raised
+    """
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100.0
+    # Skip ahead until we reach the end
+    time_between_action = 60*999999999
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(f'csv_files\\{price_file_name}', index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+
+    # Step forward in time
+    try:
+        testing_strat.go_to_next_action()
+        completed = False
+    except bs.LoopComplete:
+        completed = True
+    # Test that we caught the LoopComplete error
+    assert completed
 
 def test_go_to_next_action_big_skip():
     """
