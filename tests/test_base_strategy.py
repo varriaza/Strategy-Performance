@@ -36,7 +36,7 @@ def create_strat_class():
     price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'price':[1,2,3,4,5]})
 
     # Call the class init
-    testing_strat = bs.strategy(
+    testing_strat = bs.Strategy(
         name=name,
         starting_usd=starting_usd,
         time_between_action=time_between_action,
@@ -50,7 +50,7 @@ def test_init_blank():
     Test that calling strategy() without arguments will fail.
     """
     try:
-        bs.strategy()
+        bs.Strategy()
         failed = False
     except TypeError:
         # Strategy correctly failed with no arguments
@@ -69,7 +69,7 @@ def test_init():
     price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'price':[1,2,3,4,5]})
 
     # Call the class init
-    testing_strat = bs.strategy(
+    testing_strat = bs.Strategy(
         name=name,
         starting_usd=starting_usd,
         time_between_action=time_between_action,
@@ -129,8 +129,27 @@ def test_run_logic():
         failed = True
     assert failed
 
-# def test_go_to_next_action():
-    # TODO - Add test after time test is created
+def test_go_to_next_action():
+    """
+    Test that the time stepping function works.
+    """
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100.0
+    time_between_action = 5
+    price_period_name = 'test_period'
+    price_df = pd.read_csv('csv_files\\test.csv', index_col='index')
+    # price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'price':[1,2,3,4,5]})
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+    # TODO - Finish
 
 def setup_buy_and_sell_strat():
     """

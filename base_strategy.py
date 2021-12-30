@@ -4,7 +4,7 @@ Gets inherited by specific strategies.
 """
 import pandas as pd
 
-class strategy:
+class Strategy:
     """Base strategy class, specific strategies should inherent this."""
     def __init__(self, name, starting_usd, time_between_action, price_period_name, price_df) -> None:
         # Name of the strategy
