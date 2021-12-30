@@ -1,50 +1,64 @@
 # Strategy-Performance
 Compare how different trading strategies for ETH-USD have behaved over different time periods.
 
-Time Periods:
+ETH Price Data is taken from:
+https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
+
+I did not include the data in this repo as it would take decent amount of space and this is very much WIP.
+Price is currently calculated as: (Open+Close)/2
+Since the data is captured once a minute, that should be a good enough approximation for my purposes.
+This could pose problems if a strategy trades more often than once a minute.
+
+Time periods to test:
 - 3 Years	
 - 2 Years	
 - 1 Year	
 - High to low	
-- Low to High	
+- Low to high	
 - High to high	
 - Low to low	
 - High to medium	
 - Med to high
 
-Strategies:
-- DCA 1m									
-- DCA 14d									
-- DCA 7d									
-- DCA 1d									
-- Moving Avg b/s									
-- Log fit buy 1m									
-- Log fit buy 14d									
-- Log fit buy 7d									
-- Log fit b/s 1m									
-- Log fit b/s 14d									
-- Log fit b/s 7d									
+Strategies to test:
+- DCA every 1 month									
+- DCA every 14 days									
+- DCA every 7 days									
+- DCA every 1 day
+- DCA every 1 hour									
+- Moving Avg as indicators for buy and sell (buy and sell)									
+- Log fit (similar to DCA but only buy when price is below log fit) buy every 1 month
+- Log fit buy every 14 days									
+- Log fit buy every 7 days
+- Log fit buy every 1 day	
+- Log fit buy every 1 hour								
+- Log fit buy (when below) and sell (when above) every 1 month									
+- Log fit buy and sell every 14 days									
+- Log fit buy and sell every 7 days	
+- Log fit buy and sell every 1 day
+- Log fit buy and sell every 1 hour
+- Simple momentum buy and sell							
 - Neural Network									
 - Other ML?
-
-Why log fit?
-- ETH is a new project (even still) and will have exponential growth
 
 Extra Info per Strategy per time period:
 - Price delta (start to end)
 - % Price delta
-- Total Returns in USD (aka ETH+USD)
-- Returns in # ETH
+- Total Returns in USD (aka ending ETH+USD)
+- Returns in # ETH (aka ending ETH+USD in ETH value)
 - % Total Returns (in USD) 
 - Total trades made
 - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
-- Volatility of price (Sharpe Ratio)
+- Volatility of price for time period (Sharpe Ratio)
 - Negative volatility of price (Sortino Ratio)
 - Volatility of returns (Sharpe Ratio)
-- Other return metrics?
-How do I display this? It breaks the table style logic with strategies as rows and time periods as columns.
-- Maybe a table within a table?
-- Maybe break each table into specific time periods (I think this is best)
+
+How do I display this?
+- Break each table into specific time periods (I think this is best)
+    - So the Low to low table would have the "Extra Info" as columns and strategies as rows
+        - This way we can compare the strategies in the same time periods
+    - I will also make a table for the strategies overall
+        - aka the "DCA every 1 day" table would have the "Extra Info" as columns and time periods as rows
 
 Overall logic Summary:
 - Break price/time data into time periods
@@ -54,7 +68,7 @@ Overall logic Summary:
 - For each strategy, run on each time period
     - Strategies are their own python script 
         - Make them classes that inherent from a base strategy class
-        - Base strategy class has
+        - Base strategy class has (WIP)
             - Strategy Name
             - Has current amount of USD
             - Current amount of ETH
@@ -63,7 +77,7 @@ Overall logic Summary:
             - \# trades made
             - Start time # set by strat, referenced by stepping func 
             - End time # set by strat, referenced by stepping func
-            - A dataframe of returns over time
+            - A dataframe of returns over time (used for final data analysis)
                 - \# of ETH
                 - \# of USD
                 - Total value in USD
@@ -75,13 +89,16 @@ Overall logic Summary:
         - Strategy has current time and next time it wants to get price
         - Loop until current time > next time (but update the returns over time df) 
         - Perform logic, loop more 
-- Save results to a (central or individual?) results file   
-    - If saved to individual file merge into main file at the end for a nice summary
+- Save results to a time period results table inside a csv file   
+    - If time period file exists, check if strategy is already a row. If it is, replace it, if not append new data.
 
-Summary:
-- Define all time frames in a cell
-- Run strategy cell in Overall jupyter notebook
-- Cell creates instance of strategy class
-- Sets starting value like money
-- Calls run simulation function for each time frame
-- The sim 
+Summary (to be implemented):
+- Create csv files for all time frames
+- Create csv with all values for logic that needs to run at the beginning of a strategy for setup (only give the strategy access to data it would have had at the start?)
+- Create strategy in its own python file, make it inherit from base strategy class.
+- Call strategy in Overall jupyter notebook for ease of running and possible loops
+- Cell creates instance of the specific strategy class
+    - Sets starting value like money, time period and etc
+    - Calls run simulation function
+    - Simulation runs through all data in given time period
+    - Results are saved to relevant tables
