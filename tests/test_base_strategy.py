@@ -27,6 +27,21 @@ def compare_df(df1, df2):
         print(df1.where(df1.values==df2.values).notna())
     return df1.equals(df2)
 
+def compare_dicts(dict1, dict2):
+    """
+    Show values that differ between dictionaries. Return true if the dictionaries are equal.
+    """
+    set1 = set(dict1.items())
+    set2 = set(dict2.items())
+    if dict1 != dict2:
+        # Do a symmetric diff to find values that don't match
+        sorted_values = sorted(set1^set2)
+        # Print the values sorted and nicely for debuging
+        for value in sorted_values:
+            print(value)
+        return False
+    return True
+
 def create_strat_class():
     """
     Create a default strategy class instance for tests.
@@ -564,6 +579,63 @@ def test_sell_with_none():
         # ex.args should only have one value
         failed = bool(expected_msg == ex.args[0])
     assert failed
+
+def test_add_data_to_results():
+    """
+    Test that the data in add_data_to_results is generated correctly.
+    """
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100.0
+    # Skip ahead 9 minutes
+    time_between_action = 60*9
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(f'csv_files\\{price_file_name}', index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+    # Give the strategy 1 eth for testing
+    testing_strat.current_eth = 1
+    # Set trades
+    testing_strat.trades_made = 10
+    # Start price is: 849.4812499999999
+    # Final price is: 1005.2574999999999
+
+    expected_value_dict = {
+            # - Price delta (start to end)
+            'Price Delta': 1005.2574999999999-849.4812499999999,
+            # - % Price delta
+            '% Price Delta': (1005.2574999999999/849.4812499999999)*100,
+            # Starting USD
+            'Starting USD': starting_usd,
+            # Starting ETH
+            'Starting ETH': 0,
+            # - Total ending value in USD (aka ending ETH+USD)
+            'Returns in USD': 100+1005.2574999999999,
+            # - Returns in # ETH (aka ending ETH+USD in ETH value)
+            'Returns in ETH': 1 + (100/1005.2574999999999),
+            # - % Total Returns (in USD)
+            '% Return': (1105.2574999999999*100.0/100)-100.0,
+            # - Total trades made
+            'Trades Made': 10,
+            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
+            '% Return Per Trade': testing_strat.get_returns()/10,
+            # - Volatility of returns (Sharpe Ratio)
+            'Sharpe Ratio of Returns': 'TBA', # sharpe(testing_strat.returns_df['Total Value'])
+            # - Volatility of price for time period (Sharpe Ratio)
+            'Sharpe Ratio of Price': 'TBA',
+            # - Negative volatility of price (Sortino Ratio)
+            'Sortino Ratio of Price': 'TBA'
+    }
+
+    assert compare_dicts(expected_value_dict, testing_strat.add_data_to_results(testing=True))
 
 if __name__ == "__main__":
     pt.main()

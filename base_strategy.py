@@ -144,3 +144,65 @@ class Strategy:
         self.current_usd += eth_to_sell*self.current_price
 
         self.trades_made += 1
+
+    def add_data_to_results(self, testing=False):
+        """
+        Calculates the following values and adds them to csv's in the results folder
+        """
+        # Calculate values
+        # Make this a dictionary that we can add where needed
+        value_dict = {
+            # - Price delta (start to end)
+            'Price Delta': self.price_df['price'].iloc[-1]-self.price_df['price'].iloc[0],
+            # - % Price delta
+            '% Price Delta': (self.price_df['price'].iloc[-1]/self.price_df['price'].iloc[0])*100,
+            # Starting USD
+            'Starting USD': self.starting_usd,
+            # Starting ETH
+            'Starting ETH': self.starting_eth,
+            # - Total ending value in USD (aka ending ETH+USD)
+            'Returns in USD': self.get_total_value(),
+            # - Returns in # ETH (aka ending ETH+USD in ETH value)
+            'Returns in ETH': self.current_eth + (self.current_usd/self.current_price),
+            # - % Total Returns (in USD)
+            '% Return': self.get_returns(),
+            # - Total trades made
+            'Trades Made': self.trades_made,
+            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
+            '% Return Per Trade': self.get_returns()/self.trades_made,
+            # - Volatility of returns (Sharpe Ratio)
+            'Sharpe Ratio of Returns': 'TBA', # sharpe(self.returns_df['Total Value'])
+            # - Volatility of price for time period (Sharpe Ratio)
+            'Sharpe Ratio of Price': 'TBA',
+            # - Negative volatility of price (Sortino Ratio)
+            'Sortino Ratio of Price': 'TBA'
+        }
+
+        # Return the values above if we are testing
+        if testing:
+            return value_dict
+
+        # Check if csv file with time period name exists in results/time_periods
+            # If not, create it. Name = time period name
+            # If it exists, read it in
+        # Add values to time period df, or update row if it exists
+            # Rows = strategy
+            # Columns = values
+        new_time_period_row = {
+            'Strategy': self.name,
+        }
+        new_time_period_row.update(value_dict)
+        # save df as csv
+        
+        # Check if a csv file for the strategy itself in results/strategies
+            # If not, create it. Name = strategy name
+            # If it exists, read it in
+        # Add values to strategy df, or update row if it exists
+            # Rows = time periods
+            # Columns = values
+        new_strategy_row = {
+            'Time Period': self.price_period_name,
+        }
+        new_strategy_row.update(value_dict)
+        # save df as csv
+
