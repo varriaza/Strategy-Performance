@@ -5,7 +5,7 @@ ETH Price Data is taken from:
 https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
 
 I did not include the data in this repo as it would take decent amount of space and this is very much WIP.
-Price is currently calculated as: (Open+Close)/2
+Price is currently calculated as: (Open+Close+High+Low)/4
 Since the data is captured once a minute, that should be a good enough approximation for my purposes.
 This could pose problems if a strategy trades more often than once a minute.
 
