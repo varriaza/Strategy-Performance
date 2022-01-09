@@ -8,15 +8,39 @@ import pandas as pd
 class LoopComplete(Exception):
     pass
 
+def unfrac(fraction, round_to=4):
+    """Turn a fraction into a float rounded to the fourth decimal."""
+    return round(float(fraction), round_to)
+
+def period_path(csv):
+    """Path to time_period csv files."""
+    # make sure we have the file ending
+    if csv[-4:] != '.csv':
+        csv = csv + '.csv'
+    return f'csv_files\\time_periods\\{csv}'
+
 class Strategy:
     """Base strategy class, specific strategies should inherent this."""
-    def __init__(self, name, starting_usd, time_between_action, price_period_name, price_df, starting_eth = 0) -> None:
+    def __init__(
+        self,
+        name,
+        starting_usd,
+        time_between_action,
+        price_period_name,
+        price_df = pd.DataFrame(),
+        starting_eth = 0
+    ) -> None:
         # Name of the strategy
         self.name = name
         # Name of the price period given
         self.price_period_name = price_period_name
-        # Holds the historical price data
-        self.price_df = price_df
+        print(f'Running strategy for: {name}')
+        print(f'For price period of: {price_period_name}')
+        # Holds the historical price data, open file using price_period_name.csv if no df given
+        if price_df.empty:
+            self.price_df = pd.read_csv(period_path(price_period_name))
+        else:
+            self.price_df = price_df
         self.start_time = int(price_df['timestamp'].iloc[0])
         self.end_time = int(price_df['timestamp'].iloc[-1])
         # Index of price_df
@@ -96,10 +120,10 @@ class Strategy:
             'Total Value',
             '% Return'
         ]] = [
-            self.current_usd,
-            self.current_eth,
-            self.get_total_value(),
-            self.get_returns()
+            unfrac(self.current_usd),
+            unfrac(self.current_eth),
+            unfrac(self.get_total_value()),
+            unfrac(self.get_returns())
         ]
 
     def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
@@ -150,11 +174,6 @@ class Strategy:
         self.current_usd += eth_to_sell*self.current_price
         self.trades_made += 1
 
-    @staticmethod
-    def unfrac(fraction, round_to=4):
-        """Turn a fraction into a float rounded to the fourth decimal."""
-        return round(float(fraction), round_to)
-
     def add_data_to_results(self, testing=False):
         """
         Calculates the following values and adds them to csv's in the results folder
@@ -163,31 +182,31 @@ class Strategy:
         # Make this a dictionary that we can add where needed
         value_dict = {
             # - Price delta (start to end)
-            'Price Delta': self.unfrac(
+            'Price Delta': unfrac(
                 frac(self.price_df['fraction_price'].iloc[-1])-frac(self.price_df['fraction_price'].iloc[0])
             ),
             # - % Price delta
-            '% Price Delta': self.unfrac(
+            '% Price Delta': unfrac(
                 (frac(self.price_df['fraction_price'].iloc[-1])/frac(self.price_df['fraction_price'].iloc[0]))*frac(100)
             ),
             # Starting USD
-            'Starting USD': self.unfrac(self.starting_usd),
+            'Starting USD': unfrac(self.starting_usd),
             # Starting ETH
-            'Starting ETH': self.unfrac(self.starting_eth),
+            'Starting ETH': unfrac(self.starting_eth),
             # Ending ETH
-            'Ending ETH': self.unfrac(self.current_eth),
+            'Ending ETH': unfrac(self.current_eth),
             # - Total ending value in USD (aka ending ETH+USD)
-            'Returns in USD': self.unfrac(self.get_total_value()),
+            'Returns in USD': unfrac(self.get_total_value()),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': self.unfrac(self.get_total_value()/self.current_price),
+            'Returns in ETH': unfrac(self.get_total_value()/self.current_price),
             # - % Total Returns (in USD)
-            '% Return': self.unfrac(self.get_returns()),
+            '% Return': unfrac(self.get_returns()),
             # - Total trades made
             'Trades Made': self.trades_made,
             # Average dollar amount made per trade
-            'Flat Return Per Trade': self.unfrac(self.get_total_value()/self.trades_made),
+            'Flat Return Per Trade': unfrac(self.get_total_value()/self.trades_made),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
-            '% Return Per Trade': self.unfrac(self.get_returns()/self.trades_made),
+            '% Return Per Trade': unfrac(self.get_returns()/self.trades_made),
             # - Volatility of returns (Sharpe Ratio)
             'Sharpe Ratio of Returns': 'TBA', # sharpe(self.returns_df['Total Value'])
             # - Volatility of price for time period (Sharpe Ratio)

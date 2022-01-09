@@ -6,18 +6,6 @@ import pytest as pt
 import pandas as pd
 import base_strategy as bs
 
-def full_path(csv):
-    """
-    Path to full data csv files
-    """
-    return f'csv_files\\{csv}'
-
-def period_path(csv):
-    """
-    Path to time_period csv files
-    """
-    return f'csv_files\\time_periods\\{csv}'
-
 def compare(value1, value2):
     """
     Helpful testing function that prints values if there are a mismatch.
@@ -178,7 +166,7 @@ def test_go_to_next_action():
     time_between_action = 1
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -243,7 +231,7 @@ def test_go_to_end():
     time_between_action = 60*999999999
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -274,7 +262,7 @@ def test_go_to_next_action_big_skip():
     time_between_action = 60*9
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -319,12 +307,12 @@ def test_go_to_next_action_big_skip():
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[26]],
         '# of USD': [testing_strat.starting_usd],
-        '# of ETH': [frac(1)],
-        'Total Value': [frac(price_df['fraction_price'].iloc[26]) + testing_strat.current_usd],
-        '% Return': [
+        '# of ETH': [bs.unfrac(frac(1))],
+        'Total Value': [bs.unfrac(frac(price_df['fraction_price'].iloc[26]) + testing_strat.current_usd)],
+        '% Return': [bs.unfrac(
             ((frac(price_df['fraction_price'].iloc[26])+testing_strat.current_usd)*frac(100)/testing_strat.starting_usd)
             -frac(100)
-        ]
+        )]
     })
     assert compare_df(testing_strat.returns_df.iloc[testing_strat.current_index-1],expected_returns_df.iloc[-1])
 
@@ -613,10 +601,6 @@ def test_sell_with_none():
         failed = bool(expected_msg == ex.args[0])
     assert failed
 
-def unfrac(fraction, round_to=4):
-    """Turn a fraction into a float rounded to the fourth decimal."""
-    return round(float(fraction), round_to)
-
 def test_add_data_to_results():
     """
     Test that the data in add_data_to_results is generated correctly.
@@ -628,7 +612,7 @@ def test_add_data_to_results():
     time_between_action = 60*9
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -649,26 +633,26 @@ def test_add_data_to_results():
 
     expected_value_dict = {
             # - Price delta (start to end)
-            'Price Delta': unfrac(frac(final_price)-frac(start_price)),
+            'Price Delta': bs.unfrac(frac(final_price)-frac(start_price)),
             # - % Price delta
-            '% Price Delta': unfrac((final_price/start_price)*frac(100)),
+            '% Price Delta': bs.unfrac((final_price/start_price)*frac(100)),
             # Starting USD
-            'Starting USD': unfrac(starting_usd),
+            'Starting USD': bs.unfrac(starting_usd),
             # Starting ETH
-            'Starting ETH': unfrac(frac(0)),
-            'Ending ETH': unfrac(testing_strat.current_eth),
+            'Starting ETH': bs.unfrac(frac(0)),
+            'Ending ETH': bs.unfrac(testing_strat.current_eth),
             # - Total ending value in USD (aka ending ETH+USD)
-            'Returns in USD': unfrac(frac(100)+final_price),
+            'Returns in USD': bs.unfrac(frac(100)+final_price),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': unfrac(frac(1) + (frac(100)/final_price)),
+            'Returns in ETH': bs.unfrac(frac(1) + (frac(100)/final_price)),
             # - % Total Returns (in USD)
-            '% Return': unfrac(((final_price+frac(100))*frac(100)/frac(100))-frac(100)),
+            '% Return': bs.unfrac(((final_price+frac(100))*frac(100)/frac(100))-frac(100)),
             # - Total trades made
             'Trades Made': 10,
             # Average dollar amount made per trade
-            'Flat Return Per Trade': unfrac((frac(100)+final_price)/10),
+            'Flat Return Per Trade': bs.unfrac((frac(100)+final_price)/10),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
-            '% Return Per Trade': unfrac(testing_strat.get_returns()/10),
+            '% Return Per Trade': bs.unfrac(testing_strat.get_returns()/10),
             # - Volatility of returns (Sharpe Ratio)
             'Sharpe Ratio of Returns': 'TBA', # sharpe(testing_strat.returns_df['Total Value'])
             # - Volatility of price for time period (Sharpe Ratio)
