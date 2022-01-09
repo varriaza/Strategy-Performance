@@ -1,6 +1,8 @@
 # User files
 full_data*
-csv_files/*.csv
+csv_files*
+TODO.txt
+testing.ipynb
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

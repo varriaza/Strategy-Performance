@@ -2,6 +2,7 @@
 Base strategy class.
 Gets inherited by specific strategies.
 """
+from fractions import Fraction as frac
 import pandas as pd
 
 class LoopComplete(Exception):
@@ -20,36 +21,33 @@ class Strategy:
         self.end_time = int(price_df['timestamp'].iloc[-1])
         # Index of price_df
         self.current_index = 0
-        # This will be in timestamp units (aka seconds). 
-        # Time between when the strategy will check if it wants to buy or sell.
+        # This will be in timestamp units (aka seconds)
+        # Time between when the strategy will check if it wants to buy or sell
         # Each data point is collected 60 seconds apart
         self.time_between_action = time_between_action
-        self.starting_usd = starting_usd
-        self.starting_eth = starting_eth
-        self.current_usd = starting_usd
+        self.starting_usd = frac(starting_usd)
+        self.starting_eth = frac(starting_eth)
+        self.current_usd = frac(starting_usd)
         # We assume that no eth is currently held
-        self.current_eth = starting_eth
+        self.current_eth = frac(starting_eth)
         self.current_time = self.start_time
         # Get price at the first time period
-        self.current_price = price_df['price'].iloc[0]
-        self.starting_total_value = starting_usd + (starting_eth*self.current_price)
+        self.current_price = frac(price_df['fraction_price'].iloc[0])
+        self.starting_total_value = self.starting_usd + (self.starting_eth*self.current_price)
         self.trades_made = 0
-        self.returns_df = pd.DataFrame(
-            {
-                'Time': [self.start_time],
-                '# of USD': [starting_usd],
-                '# of ETH': [starting_eth],
-                'Total Value': [self.get_total_value()],
-                '% Return': [self.get_returns()]
-            },
-            columns=[
-                'Time',
-                '# of USD',
-                '# of ETH',
-                'Total Value',
-                '% Return'
-            ]
-        )
+        # Create all of the rows for price_df so we don't have to append rows, just add data
+        # Get timestamps from price_df
+        self.returns_df = pd.DataFrame(price_df['timestamp'])
+        # Add other columns we need
+        self.returns_df = self.returns_df.append(pd.DataFrame(columns=[
+            '# of USD',
+            '# of ETH',
+            'Total Value',
+            '% Return']))
+        # Rename the index to 'index'
+        self.returns_df.index.names = ['index']
+        # Make sure the first row has initial data
+        self.add_to_returns()
 
     def run_logic(self):
         """
@@ -70,48 +68,53 @@ class Strategy:
             self.add_to_returns()
             self.current_index += 1
             # Stop looping and show the strategy we are finished when we try to go past the last index.
-            if self.current_index > self.price_df.index[-1]:
+            if self.current_index >= self.price_df.index[-1]:
                 raise LoopComplete('All done')
             self.current_time = self.price_df['timestamp'].iloc[self.current_index]
             # Update price so we can update total value/total returns
-            self.current_price = self.price_df['price'].iloc[self.current_index]
-            
+            self.current_price = frac(self.price_df['fraction_price'].iloc[self.current_index])
 
     def get_total_value(self):
         """
         Returns the total USD+ETH portfolio value in USD
         """
-        return round(self.current_usd + (self.current_eth*self.current_price), 2)
+        return self.current_usd + (self.current_eth*self.current_price)
 
     def get_returns(self):
         """
         Returns % returns since the start of the time period.
         """
-        return (self.get_total_value()*100.0/self.starting_total_value)-100.0
+        return (self.get_total_value()*frac(100)/self.starting_total_value)-frac(100)
 
     def add_to_returns(self):
         """
         Called on buy or sell. Adds current values to returns df.
         """
-        new_row = {
-            'Time': self.current_time,
-            '# of USD': self.current_usd,
-            '# of ETH': self.current_eth,
-            'Total Value': self.get_total_value(),
-            '% Return': self.get_returns()
-        }
-        self.returns_df = self.returns_df.append(new_row, ignore_index=True)
+        self.returns_df.loc[self.current_index, [
+            '# of USD',
+            '# of ETH',
+            'Total Value',
+            '% Return'
+        ]] = [
+            self.current_usd,
+            self.current_eth,
+            self.get_total_value(),
+            self.get_returns()
+        ]
 
     def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
         """
         Buy ETH with USD.
         Raises ValueError if the action would result in negative USD or there are bad inputs.
         """
+        # Fraction inputs for math compatibility
+        eth_to_buy = frac(eth_to_buy)
+        usd_eth_to_buy = frac(usd_eth_to_buy)
         if eth_to_buy == 0 and usd_eth_to_buy == 0:
             raise ValueError("Must buy non-zero amounts")
         if eth_to_buy != 0 and usd_eth_to_buy != 0:
             raise ValueError("Only supply USD amount or ETH amount, not both.")
-        # If we are supplied eth amounts, convert to USD amounts to allow for standardization.
+        # If we are supplied eth amounts, convert to ETH amounts to allow for standardization.
         if eth_to_buy != 0:
             usd_eth_to_buy = eth_to_buy*self.current_price
 
@@ -128,6 +131,9 @@ class Strategy:
         Sell ETH for USD.
         Raises ValueError if the action would result in negative ETH or there are bad inputs.
         """
+        # Fraction inputs for math compatibility
+        eth_to_sell = frac(eth_to_sell)
+        usd_eth_to_sell = frac(usd_eth_to_sell)
         if eth_to_sell == 0 and usd_eth_to_sell == 0:
             raise ValueError("Must sell non-zero amounts")
         if eth_to_sell != 0 and usd_eth_to_sell != 0:
@@ -142,8 +148,12 @@ class Strategy:
             )
         self.current_eth -= eth_to_sell
         self.current_usd += eth_to_sell*self.current_price
-
         self.trades_made += 1
+
+    @staticmethod
+    def unfrac(fraction, round_to=4):
+        """Turn a fraction into a float rounded to the fourth decimal."""
+        return round(float(fraction), round_to)
 
     def add_data_to_results(self, testing=False):
         """
@@ -153,23 +163,29 @@ class Strategy:
         # Make this a dictionary that we can add where needed
         value_dict = {
             # - Price delta (start to end)
-            'Price Delta': self.price_df['price'].iloc[-1]-self.price_df['price'].iloc[0],
+            'Price Delta': self.unfrac(
+                frac(self.price_df['fraction_price'].iloc[-1])-frac(self.price_df['fraction_price'].iloc[0])
+            ),
             # - % Price delta
-            '% Price Delta': (self.price_df['price'].iloc[-1]/self.price_df['price'].iloc[0])*100,
+            '% Price Delta': self.unfrac(
+                (frac(self.price_df['fraction_price'].iloc[-1])/frac(self.price_df['fraction_price'].iloc[0]))*frac(100)
+            ),
             # Starting USD
-            'Starting USD': self.starting_usd,
+            'Starting USD': self.unfrac(self.starting_usd),
             # Starting ETH
-            'Starting ETH': self.starting_eth,
+            'Starting ETH': self.unfrac(self.starting_eth),
+            # Ending ETH
+            'Ending ETH': self.unfrac(self.current_eth),
             # - Total ending value in USD (aka ending ETH+USD)
-            'Returns in USD': self.get_total_value(),
+            'Returns in USD': self.unfrac(self.get_total_value()),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': self.current_eth + (self.current_usd/self.current_price),
+            'Returns in ETH': self.unfrac(self.current_eth + (self.current_usd/self.current_price)),
             # - % Total Returns (in USD)
-            '% Return': self.get_returns(),
+            '% Return': self.unfrac(self.get_returns()),
             # - Total trades made
             'Trades Made': self.trades_made,
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
-            '% Return Per Trade': self.get_returns()/self.trades_made,
+            '% Return Per Trade': self.unfrac(self.get_returns()/self.trades_made),
             # - Volatility of returns (Sharpe Ratio)
             'Sharpe Ratio of Returns': 'TBA', # sharpe(self.returns_df['Total Value'])
             # - Volatility of price for time period (Sharpe Ratio)
@@ -180,6 +196,7 @@ class Strategy:
 
         # Return the values above if we are testing
         if testing:
+            print(f'Real Values:\n{value_dict}')
             return value_dict
 
         # Check if csv file with time period name exists in results/time_periods
