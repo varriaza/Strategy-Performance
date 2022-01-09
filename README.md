@@ -25,7 +25,8 @@ Strategies to test:
 - DCA every 1 month									
 - DCA every 14 days									
 - DCA every 7 days									
-- DCA every 1 day									
+- DCA every 1 day
+- DCA every 1 hour									
 - Moving Avg as indicators for buy and sell (buy and sell)									
 - Log fit (similar to DCA but only buy when price is below log fit) buy every 1 month
 - Log fit buy every 14 days									
@@ -108,3 +109,22 @@ Summary (to be implemented):
         - Calls run simulation function
         - Simulation runs through all data in given time period
         - Results are saved to relevant tables
+
+Roadmap:
+[ ] - WIP
+[x] - Complete
+
+[ ] Make price period name auto read in the price_df of the same name unless a price_df is supplied 
+[ ] Create DCA strat
+[ ] Test DCA strat on test time period
+[ ] Collect data from DCA on real time period
+[ ] Create all time periods
+[ ] Collect DCA data on all time periods
+[ ] Create Log fit buy
+[ ] Create Log fit buy and sell 
+[ ] Create Buy and sell based on fear and greed index
+[ ] Create Combo of fear/greed and log fit
+[ ] Create Simple momentum buy and sell							
+[ ] Create Neural Network
+[ ] Standardize input as 10k
+[ ] consider adding exchange cost (.03%? aka 3/100) on every trade
