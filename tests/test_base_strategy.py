@@ -665,7 +665,9 @@ def test_add_data_to_results():
             '% Return': unfrac(((final_price+frac(100))*frac(100)/frac(100))-frac(100)),
             # - Total trades made
             'Trades Made': 10,
-            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
+            # Average dollar amount made per trade
+            'Flat Return Per Trade': unfrac((frac(100)+final_price)/10),
+            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
             '% Return Per Trade': unfrac(testing_strat.get_returns()/10),
             # - Volatility of returns (Sharpe Ratio)
             'Sharpe Ratio of Returns': 'TBA', # sharpe(testing_strat.returns_df['Total Value'])

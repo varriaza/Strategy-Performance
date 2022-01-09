@@ -19,13 +19,13 @@ Time periods to test:
 - Low to low	
 - High to medium	
 - Med to high
+- Low to high to low
 
 Strategies to test:
 - DCA every 1 month									
 - DCA every 14 days									
 - DCA every 7 days									
-- DCA every 1 day
-- DCA every 1 hour									
+- DCA every 1 day									
 - Moving Avg as indicators for buy and sell (buy and sell)									
 - Log fit (similar to DCA but only buy when price is below log fit) buy every 1 month
 - Log fit buy every 14 days									
@@ -37,17 +37,23 @@ Strategies to test:
 - Log fit buy and sell every 7 days	
 - Log fit buy and sell every 1 day
 - Log fit buy and sell every 1 hour
+- Buy and sell based on fear and greed index
+- Combo of fear/greed and log fit
 - Simple momentum buy and sell							
 - Neural Network									
 - Other ML?
 
 Extra Info per Strategy per time period:
-- Price delta (start to end)
-- % Price delta
-- Total Returns in USD (aka ending ETH+USD)
-- Returns in # ETH (aka ending ETH+USD in ETH value)
+- Time period price delta (start to end)
+- Time period % price delta
+- Starting USD
+- Starting ETH
+- Ending ETH # different than returns in ETH as that is total value
+- Total returns in USD (aka ending ETH+USD)
+- Total returns in # ETH (aka ending ETH+USD in ETH value)
 - % Total Returns (in USD) 
 - Total trades made
+- Flat Return Per Trade # Average dollar amount made per trade
 - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
 - Volatility of price for time period (Sharpe Ratio)
 - Negative volatility of price (Sortino Ratio)
@@ -94,11 +100,11 @@ Overall logic Summary:
 
 Summary (to be implemented):
 - Create csv files for all time frames
-- Create csv with all values for logic that needs to run at the beginning of a strategy for setup (only give the strategy access to data it would have had at the start?)
+- Create csv with all values for logic that needs to run at the beginning of a strategy for setup (only give the strategy access to data it would have had at the start.)
 - Create strategy in its own python file, make it inherit from base strategy class.
-- Call strategy in Overall jupyter notebook for ease of running and possible loops
-- Cell creates instance of the specific strategy class
-    - Sets starting value like money, time period and etc
-    - Calls run simulation function
-    - Simulation runs through all data in given time period
-    - Results are saved to relevant tables
+- Call strategy in Overall jupyter notebook for ease of running and possible loops (see create_tables.ipynb)
+    - Cell creates instance of the specific strategy class
+        - Sets starting value like money, time period and etc
+        - Calls run simulation function
+        - Simulation runs through all data in given time period
+        - Results are saved to relevant tables

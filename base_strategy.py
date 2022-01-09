@@ -179,12 +179,14 @@ class Strategy:
             # - Total ending value in USD (aka ending ETH+USD)
             'Returns in USD': self.unfrac(self.get_total_value()),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': self.unfrac(self.current_eth + (self.current_usd/self.current_price)),
+            'Returns in ETH': self.unfrac(self.get_total_value()/self.current_price),
             # - % Total Returns (in USD)
             '% Return': self.unfrac(self.get_returns()),
             # - Total trades made
             'Trades Made': self.trades_made,
-            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
+            # Average dollar amount made per trade
+            'Flat Return Per Trade': self.unfrac(self.get_total_value()/self.trades_made),
+            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
             '% Return Per Trade': self.unfrac(self.get_returns()/self.trades_made),
             # - Volatility of returns (Sharpe Ratio)
             'Sharpe Ratio of Returns': 'TBA', # sharpe(self.returns_df['Total Value'])
