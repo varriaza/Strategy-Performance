@@ -1,7 +1,9 @@
 """
 Testing for the default/base strategy class
 """
+import os
 from fractions import Fraction as frac
+import numpy as np
 import pytest as pt
 import pandas as pd
 import base_strategy as bs
@@ -20,15 +22,26 @@ def compare_df(df1, df2):
     Helpful testing function that prints values if there are a mismatch.
     """
     if not df1.equals(df2):
-        print(f'df1:\n{df1}')
-        for i in df1:
-            print(f"{i}'s type: {type(i)}")
+        print('df1:')
+        print(df1.to_string())
+        # print(df1.shape)
+        # print(df1.values[-1])
+        # for i in df1:
+        #     print(f"{i}'s type: {type(df1[i].values[0])}")
         print('---')
-        print(f'df2:\n{df2}')
-        for i in df2:
-            print(f"{i}'s type: {type(i)}")
-        print('---')
-        print(df1.where(df1.values==df2.values).notna())
+        print('df2:')
+        print(df2.to_string())
+        # print(df2.shape)
+        # print(df2.values[-1])
+        # for i in df2:
+        #     print(f"{i}'s type: {type(df2[i].values[0])}")
+        # print('---')
+
+        print(df1.where(df1.values!=df2.values).notna().to_string())
+        # values_not_equal = df1.values!=df2.values
+        # print(f'values_not_equal:\n{values_not_equal}')
+        # print(df1.loc[values_not_equal].notna())
+
     return df1.equals(df2)
 
 def compare_dicts(dict1, dict2):
@@ -43,8 +56,31 @@ def compare_dicts(dict1, dict2):
         # Print the values sorted and nicely for debuging
         for value in sorted_values:
             print(value)
+            print(f'var type: {type(value[1])}')
         return False
     return True
+
+def delete_test_files():
+    """
+    Make sure that there are no extra result files BEFORE and after we start the tests.
+    """
+    price_period_name = 'test'
+    try:
+        os.remove(bs.price_period_results_path(price_period_name))
+    except FileNotFoundError:
+        pass
+
+    name = 'Testing'
+    try:
+        os.remove(bs.strategy_results_path(name))
+    except FileNotFoundError:
+        pass
+
+    returns_history = f'{name}_{price_period_name}_returns_history.csv'
+    try:
+        os.remove(bs.returns_history_path(returns_history))
+    except FileNotFoundError:
+        pass
 
 def create_strat_class():
     """
@@ -207,16 +243,20 @@ def test_go_to_next_action():
     # Test that index updates
     assert old_index == 0
     assert testing_strat.current_index == 2
+    # make var as we will use in two places
+    total_value = frac(price_df['fraction_price'].iloc[1]) + testing_strat.current_usd
+    delta_t = float(testing_strat.current_time-60 - testing_strat.start_time)
+    # convert seconds to year (account for a fourth of a leap year day)
+    seconds_in_year = 60*60*24*365.25
+    fraction_of_year = frac(delta_t)/frac(seconds_in_year)
+    return_val = (total_value*frac(100)/testing_strat.starting_total_value)-frac(100)
     # Test that retruns_df updates
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[1]],
         '# of USD': [testing_strat.starting_usd],
         '# of ETH': [frac(1)],
-        'Total Value': [frac(price_df['fraction_price'].iloc[1]) + testing_strat.current_usd],
-        '% Return': [
-            ((frac(price_df['fraction_price'].iloc[1])+testing_strat.current_usd)*frac(100)/testing_strat.starting_usd)-
-            frac(100)
-        ]
+        'Total Value': [bs.unfrac(total_value)],
+        '% Return': [bs.unfrac(return_val/fraction_of_year)]
     })
     assert compare_df(testing_strat.returns_df.iloc[testing_strat.current_index-1],expected_returns_df.iloc[-1])
 
@@ -298,21 +338,27 @@ def test_go_to_next_action_big_skip():
     assert testing_strat.current_price == frac(price_df['fraction_price'].iloc[27])
     # Test that total value updates
     # Total should match exactly
-    assert testing_strat.get_total_value() == (testing_strat.current_usd + frac(price_df['fraction_price'].iloc[27])*testing_strat.current_eth)
+    assert testing_strat.get_total_value() == (
+        testing_strat.current_usd + frac(price_df['fraction_price'].iloc[27])*testing_strat.current_eth
+    )
 
     # Test that index updates
     assert old_index == 0
     assert testing_strat.current_index == 27
+    # make var as we will use in two places
+    total_value = frac(price_df['fraction_price'].iloc[26]) + testing_strat.current_usd
+    delta_t = float(testing_strat.current_time-60 - testing_strat.start_time)
+    # convert seconds to year (account for a fourth of a leap year day)
+    seconds_in_year = 60*60*24*365.25
+    fraction_of_year = frac(delta_t)/frac(seconds_in_year)
+    return_val = (total_value*frac(100)/testing_strat.starting_total_value)-frac(100)
     # Test that retruns_df updates
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[26]],
         '# of USD': [testing_strat.starting_usd],
         '# of ETH': [bs.unfrac(frac(1))],
-        'Total Value': [bs.unfrac(frac(price_df['fraction_price'].iloc[26]) + testing_strat.current_usd)],
-        '% Return': [bs.unfrac(
-            ((frac(price_df['fraction_price'].iloc[26])+testing_strat.current_usd)*frac(100)/testing_strat.starting_usd)
-            -frac(100)
-        )]
+        'Total Value': [bs.unfrac(total_value)],
+        '% Return': [bs.unfrac(return_val/fraction_of_year)]
     })
     assert compare_df(testing_strat.returns_df.iloc[testing_strat.current_index-1],expected_returns_df.iloc[-1])
 
@@ -376,20 +422,33 @@ def test_get_returns():
     """
     Test that the current return % value is calculated correctly
     """
+    # Standardize our time passed as 1 day in seconds
+    delta_t = float(60*60*24)
+    # convert seconds to year (account for a fourth of a leap year day)
+    seconds_in_year = 60*60*24*365.25
+    fraction_of_year = frac(delta_t)/frac(seconds_in_year)
+    
     test_strat = setup_buy_and_sell_strat()
+    # Standardize our time passed as 1 day in seconds
+    test_strat.current_time += int(60*60*24)
+
     test_strat.starting_usd = frac(10.0)
     test_strat.current_usd = frac(20.0)
     test_strat.current_eth = frac(0.0)
     test_strat.starting_total_value = test_strat.starting_usd
     test_strat.current_price = frac(20.0)
-    assert compare(test_strat.get_returns(), frac(100.0))
+    return_val = (test_strat.get_total_value()*frac(100)/test_strat.starting_total_value)-frac(100)
+    annual_returns = return_val/fraction_of_year
+    assert compare(test_strat.get_returns(), annual_returns)
 
     test_strat.starting_usd = frac(10.0)
     test_strat.starting_total_value = test_strat.starting_usd
     test_strat.current_usd = frac(20.0)
     test_strat.current_eth = frac(1.0)
     test_strat.current_price = frac(10.0)
-    assert compare(test_strat.get_returns(), frac(200.0))
+    return_val = (test_strat.get_total_value()*frac(100)/test_strat.starting_total_value)-frac(100)
+    annual_returns = return_val/fraction_of_year
+    assert compare(test_strat.get_returns(), annual_returns)
 
     test_strat.starting_usd = frac('1234078960/871207')
     test_strat.starting_total_value = test_strat.starting_usd
@@ -397,10 +456,9 @@ def test_get_returns():
     test_strat.current_eth = frac('377812074/70861')
     test_strat.current_price = frac('371741231423/981173440')
     # (self.get_total_value()*frac(100)/self.starting_total_value)-frac(100)
-    assert compare(
-        test_strat.get_returns(),
-        (test_strat.get_total_value()*frac(100)/test_strat.starting_total_value)-frac(100)
-    )
+    return_val = (test_strat.get_total_value()*frac(100)/test_strat.starting_total_value)-frac(100)
+    annual_returns = return_val/fraction_of_year
+    assert compare(test_strat.get_returns(), annual_returns)
 
 def test_buy_eth():
     """
@@ -642,25 +700,308 @@ def test_add_data_to_results():
             'Starting ETH': bs.unfrac(frac(0)),
             'Ending ETH': bs.unfrac(testing_strat.current_eth),
             # - Total ending value in USD (aka ending ETH+USD)
-            'Returns in USD': bs.unfrac(frac(100)+final_price),
+            'Returns in USD': bs.unfrac(frac(100)+final_price-frac(100)),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': bs.unfrac(frac(1) + (frac(100)/final_price)),
+            'Returns in ETH': bs.unfrac(frac(1)),
+            # Mean Annual % Return (aka average)
+            'Mean Annual % Return': round(testing_strat.returns_df['% Return'].mean(), 4),
+            # Median Annual % Return (aka middle number)
+            'Median Annual % Return': round(testing_strat.returns_df['% Return'].median(), 4),
             # - % Total Returns (in USD)
-            '% Return': bs.unfrac(((final_price+frac(100))*frac(100)/frac(100))-frac(100)),
+            'Final Annual % Return': bs.unfrac(testing_strat.get_returns()),
+            # Median-Mean % Return (aka different is the positional average from the numerical average)
+            'Median-Mean % Return': round(
+                testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
+                4
+            ),
             # - Total trades made
             'Trades Made': 10,
             # Average dollar amount made per trade
-            'Flat Return Per Trade': bs.unfrac((frac(100)+final_price)/10),
+            'Flat Return Per Trade': bs.unfrac((frac(100-100)+final_price)/10),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
-            '% Return Per Trade': bs.unfrac(testing_strat.get_returns()/10),
-            # - Volatility of returns (Sharpe Ratio)
-            'Sharpe Ratio of Returns': 'TBA', # sharpe(testing_strat.returns_df['Total Value'])
-            # - Volatility of price for time period (Sharpe Ratio)
-            'Sharpe Ratio of Price': 'TBA',
-            # - Negative volatility of price (Sortino Ratio)
-            'Sortino Ratio of Price': 'TBA'
+            '% Return Per Trade': bs.unfrac((testing_strat.get_returns())/10),
+            # # - Risk vs Rewards of returns (Sharpe Ratio)
+            # 'Sharpe of Returns': nan, # we have no real returns
+            # # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
+            # 'Sortino of Returns': nan, # we have no real returns
+            # - Volatility of price for time period (standard deviation)
+            'Std of Price': testing_strat.price_df['decimal_price'].std()
     }
-    assert compare_dicts(expected_value_dict, testing_strat.add_data_to_results(testing=True))
+
+    real_values = testing_strat.add_data_to_results(testing=True)
+    # drop NA values (Sharpe and Sortino) due to no real returns
+    real_values = {k: v for k, v in real_values.items() if pd.Series(v).notna().all()}
+    assert compare_dicts(expected_value_dict, real_values)
+
+def test_add_data_new_row():
+    """
+    Test that a new row in add_data_to_results is generated correctly.
+    For both strategy and price_period.
+    """
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100
+    # Skip ahead 19 minutes
+    time_between_action = 60*19
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+
+    try:
+        # make sure we don't start with a file already generated from previous tests
+        os.remove(bs.price_period_results_path(testing_strat.price_period_name))
+    except FileNotFoundError:
+        pass
+
+    # Start with an initial buy
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    # Move forward in time
+    testing_strat.go_to_next_action()
+    # Repeat
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    # Go to the end
+    try:
+        while True:
+            testing_strat.go_to_next_action()
+    except bs.LoopComplete:
+        pass
+    # Call the data consolidation
+    testing_strat.add_data_to_results()
+
+    # test price_periods
+    price_periods_expected_row = pd.DataFrame({
+        'Strategy':['Testing'], 'Price Delta': [252.2356],
+        '% Price Delta': [133.3963], 'Starting USD': [100.0], 'Starting ETH': [0.0],
+        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
+        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
+        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
+        'Median-Mean % Return': [round(
+            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
+            4
+        )],
+        'Trades Made': [testing_strat.trades_made],
+        'Flat Return Per Trade': [
+            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
+        ],
+        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
+        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
+        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
+        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+    })
+    # Open resulting file and see if the row was added as expected
+    real_price_periods_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name))
+    assert compare_df(price_periods_expected_row.reset_index(drop=True), real_price_periods_data.reset_index(drop=True))
+
+    # test strategy
+    strategy_expected_row = pd.DataFrame({
+        'Price Period':['test'], 'Price Delta': [252.2356],
+        '% Price Delta': [133.3963], 'Starting USD': [100.0], 'Starting ETH': [0.0],
+        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
+        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
+        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
+        'Median-Mean % Return': [round(
+            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
+            4
+        )],
+        'Trades Made': [testing_strat.trades_made],
+        'Flat Return Per Trade': [
+            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
+        ],
+        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
+        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
+        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
+        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+    })
+    # Open resulting file and see if the row was added as expected
+    real_strategy_data = pd.read_csv(bs.strategy_results_path(testing_strat.name))
+    assert compare_df(strategy_expected_row.reset_index(drop=True), real_strategy_data.reset_index(drop=True))
+
+
+def test_add_data_update_row():
+    """
+    Test that updating a row in add_data_to_results is done correctly.
+    For both strategy and price_period. Uses the files generated in test_add_data_to_results.
+    """
+
+    # Variable setup
+    name = 'Testing'
+    starting_usd = 100
+    # Skip ahead 9 minutes
+    time_between_action = 60*19
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+
+    # Start with an initial buy
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    # Move forward in time
+    testing_strat.go_to_next_action()
+    # Repeat
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.go_to_next_action()
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    # Go to the end
+    try:
+        while True:
+            testing_strat.go_to_next_action()
+    except bs.LoopComplete:
+        pass
+    # Call the data consolidation
+    testing_strat.add_data_to_results()
+
+    # define expected values
+    price_periods_expected_row = pd.DataFrame({
+        'Strategy':['Testing'], 'Price Delta': [252.2356],
+        '% Price Delta': [133.3963], 'Starting USD': [100.0], 'Starting ETH': [0.0],
+        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
+        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
+        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
+        'Median-Mean % Return': [round(
+            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
+            4
+        )],
+        'Trades Made': [testing_strat.trades_made],
+        'Flat Return Per Trade': [
+            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
+        ],
+        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
+        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
+        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
+        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+    })
+    strategy_expected_row = pd.DataFrame({
+        'Price Period':['test'], 'Price Delta': [252.2356],
+        '% Price Delta': [133.3963], 'Starting USD': [100.0], 'Starting ETH': [0.0],
+        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
+        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
+        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
+        'Median-Mean % Return': [round(
+            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
+            4
+        )],
+        'Trades Made': [testing_strat.trades_made],
+        'Flat Return Per Trade': [
+            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
+        ],
+        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
+        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
+        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
+        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+    })
+
+    # Open resulting file and see if the row was added as expected
+    real_price_period_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name))
+    # real_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name), index_col='index')
+    assert compare_df(price_periods_expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
+    # Delete file when finished
+    os.remove(bs.price_period_results_path(testing_strat.price_period_name))
+
+    # Now for for strategy
+    real_strategy_data = pd.read_csv(bs.strategy_results_path(testing_strat.name))
+    assert compare_df(
+        strategy_expected_row.reset_index(drop=True),
+        real_strategy_data.reset_index(drop=True)
+    )
+    os.remove(bs.strategy_results_path(testing_strat.name))
+
+def test_returns_history():
+    """
+    Make sure returns history matches returns_df
+    """
+        # Variable setup
+    name = 'Testing'
+    starting_usd = 100
+    # Skip ahead 9 minutes
+    time_between_action = 60*19
+    price_file_name = 'test.csv'
+    price_period_name = price_file_name[:-4]
+    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+
+    # Call the class init
+    testing_strat = bs.Strategy(
+        name=name,
+        starting_usd=starting_usd,
+        time_between_action=time_between_action,
+        price_period_name=price_period_name,
+        price_df=price_df
+    )
+    # we have to do at least one trade so that trades made is not zero
+    # we divide by it at the end
+    testing_strat.buy_eth(usd_eth_to_buy=10)
+    # Go to the end
+    try:
+        while True:
+            testing_strat.go_to_next_action()
+    except bs.LoopComplete:
+        pass
+    # Call the data consolidation
+    testing_strat.add_data_to_results()
+    # returns_history file name
+    returns_history = f'{name}_{price_period_name}_returns_history.csv'
+    # get the saved data
+    real_history_data = pd.read_csv(
+        bs.returns_history_path(returns_history),
+        # explicitly set the types so that they are equal
+        dtype={
+            'timestamp': float,
+            '# of USD': float,
+            '# of ETH': float,
+            'Total Value': float,
+            '% Return': float
+        }
+    )
+    # explicitly set the types so that they are equal
+    testing_strat.returns_df = testing_strat.returns_df.astype({
+            'timestamp': float,
+            '# of USD': float,
+            '# of ETH': float,
+            'Total Value': float,
+            '% Return': float
+    })
+
+    assert compare_df(
+        real_history_data, # pylint: disable=no-member
+        testing_strat.returns_df
+    )
+    delete_test_files()
 
 if __name__ == "__main__":
+    # Start clean
+    delete_test_files()
     pt.main()
+    # Clean up
+    delete_test_files()

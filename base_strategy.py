@@ -10,14 +10,41 @@ class LoopComplete(Exception):
 
 def unfrac(fraction, round_to=4):
     """Turn a fraction into a float rounded to the fourth decimal."""
-    return round(float(fraction), round_to)
+    float_num = round(float(fraction), round_to)
+    # # To avoid a DeprecationWarning from directly going from fractions to floats,
+    # # do the calculation explicitly.
+    # numerator = fraction.numerator
+    # denominator = fraction.denominator
+    # float_num = round(numerator/denominator, round_to)
+    return float_num
 
-def period_path(csv):
-    """Path to time_period csv files."""
-    # make sure we have the file ending
+def price_period_results_path(csv):
+    """Path to price_periods results csv files."""
+    # Make sure we have the file ending
     if csv[-4:] != '.csv':
         csv = csv + '.csv'
-    return f'csv_files\\time_periods\\{csv}'
+    return f'results\\price_periods\\{csv}'
+
+def returns_history_path(csv):
+    """Path to returns_history results csv files."""
+    # Make sure we have the file ending
+    if csv[-4:] != '.csv':
+        csv = csv + '.csv'
+    return f'results\\returns_history\\{csv}'
+
+def strategy_results_path(csv):
+    """Path to strategy results csv files."""
+    # Make sure we have the file ending
+    if csv[-4:] != '.csv':
+        csv = csv + '.csv'
+    return f'results\\strategies\\{csv}'
+
+def period_path(csv):
+    """Path to price_period csv files."""
+    # Make sure we have the file ending
+    if csv[-4:] != '.csv':
+        csv = csv + '.csv'
+    return f'csv_files\\price_periods\\{csv}'
 
 class Strategy:
     """Base strategy class, specific strategies should inherent this."""
@@ -92,7 +119,7 @@ class Strategy:
             self.add_to_returns()
             self.current_index += 1
             # Stop looping and show the strategy we are finished when we try to go past the last index.
-            if self.current_index >= self.price_df.index[-1]:
+            if self.current_index > self.price_df.index[-1]:
                 raise LoopComplete('All done')
             self.current_time = self.price_df['timestamp'].iloc[self.current_index]
             # Update price so we can update total value/total returns
@@ -106,9 +133,21 @@ class Strategy:
 
     def get_returns(self):
         """
-        Returns % returns since the start of the time period.
+        Returns annualized % Return
         """
-        return (self.get_total_value()*frac(100)/self.starting_total_value)-frac(100)
+        # annualized returns should be returns/year
+        # delta_t is seconds
+        delta_t = float(self.current_time - self.start_time)
+        # convert seconds to year (account for a fourth of a leap year day)
+        seconds_in_year = 60*60*24*365.25
+        fraction_of_year = frac(delta_t)/frac(seconds_in_year)
+        return_val = (self.get_total_value()*frac(100)/self.starting_total_value)-frac(100)
+        # Avoid divide by zero and numerator is zero
+        if fraction_of_year == 0 or return_val == 0:
+            returns = 0
+        else:
+            returns = return_val/fraction_of_year
+        return returns
 
     def add_to_returns(self):
         """
@@ -125,6 +164,46 @@ class Strategy:
             unfrac(self.get_total_value()),
             unfrac(self.get_returns())
         ]
+
+    def sharpe_ratio_of_returns(self):
+        """
+        Calculate the sharpe ratio of a column for a dataframe. This is a measure of risk vs reward.
+        Higher numbers offer better reward for how risky (volatile) they are.
+        Formula is as follows:
+        sharpe ratio = ((average_annual_expected_return)-(annual_risk_free_return))/(sigma)
+        annual_expected_return = annual expected return of the strategy
+        risk free rate = set by as default of 3% (0.03) (stable coin lp-ing, Aave lending and etc)
+        sigma = standard deviation of anualized returns
+        """
+        # Drop na values in case we are not at the end of the price period
+        returns = self.returns_df['% Return'].dropna()
+        # Divide by 100 to turn % return into decimal version
+        # eg 14% -> .14
+        average_annual_expected_return = (returns/100).mean()
+        annual_risk_free_return = .03
+        sigma = (self.returns_df['% Return']/100).std()
+        return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
+
+    def sortino_ratio_of_returns(self):
+        """
+        Calculate the sortino ratio of a column for a dataframe. This is a measure of risk vs reward.
+        However, sortino only uses negative volatility as risk.
+        Higher numbers offer better reward for how risky (volatile) they are.
+        Formula is as follows:
+        sortino ratio = ((average_annual_expected_return)-(annual_risk_free_return))/(sigma)
+        annual_expected_return = annual expected return of the strategy
+        risk free rate = set by as default of 3% (0.03) (stable coin lp-ing, Aave lending and etc)
+        sigma = downside only standard deviation of anualized returns
+        """
+        # Drop na values in case we are not at the end of the price period
+        returns = self.returns_df['% Return'].dropna()
+        # Divide by 100 to turn % return into decimal version
+        # eg 14% -> .14
+        average_annual_expected_return = (returns/100).mean()
+        annual_risk_free_return = .03
+        # Only use returns that are less than 0
+        sigma = (self.returns_df['% Return'].loc[self.returns_df['% Return'] < 0]/100).std()
+        return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
     def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
         """
@@ -178,6 +257,52 @@ class Strategy:
         """
         Calculates the following values and adds them to csv's in the results folder
         """
+        def new_results_row(value_dict, table_name, row_name, row_value):
+            """
+            Performs the specific logic to update/create a results table.
+            Used for both 'Strategy' tables and 'Time Period' tables.
+            """
+            if row_name == 'Strategy':
+                path_to_results = price_period_results_path(table_name)
+            elif row_name == 'Price Period':
+                path_to_results = strategy_results_path(table_name)
+            else:
+                print(f'Unexpected value passed to new row: {row_name}')
+                raise ValueError()
+            # Price_period results update
+            new_price_period_row = {
+                row_name: row_value,
+            }
+            new_price_period_row.update(value_dict)
+            price_period_columns = list(new_price_period_row.keys())
+            # turn dictionary into dataframe
+            new_price_period_row = pd.DataFrame(new_price_period_row, index=[0], columns=price_period_columns)
+
+            # Check if csv file with price period name exists in results/price_periods
+            try:
+                # If it exists, read it in
+                price_period_df = pd.read_csv(path_to_results)
+            except FileNotFoundError:
+                # If not, create it. Name = time period name
+                price_period_df = pd.DataFrame(columns=price_period_columns)
+
+            # Check if the strategy name already has a row
+            if not price_period_df.empty and row_value in price_period_df[row_name].values:
+                # If it does, delete the row and append the new data
+                drop_index = price_period_df.loc[price_period_df[row_name].values == row_value].index[0] # pylint: disable=no-member
+                price_period_df = price_period_df.drop([drop_index]) # pylint: disable=no-member
+
+            # No matter what we will want to add the row
+            price_period_df = price_period_df.append(new_price_period_row)
+            # Rename index so we can call it easily
+            price_period_df.index.names = ['index']
+
+            # Sort rows by defining column
+            price_period_df.sort_values(by=[row_name])
+            # save df as csv
+            price_period_df.to_csv(path_to_results, index=False)
+            # END of function
+
         # Calculate values
         # Make this a dictionary that we can add where needed
         value_dict = {
@@ -195,52 +320,49 @@ class Strategy:
             'Starting ETH': unfrac(self.starting_eth),
             # Ending ETH
             'Ending ETH': unfrac(self.current_eth),
-            # - Total ending value in USD (aka ending ETH+USD)
-            'Returns in USD': unfrac(self.get_total_value()),
+            # - Total ending value in USD (aka ending ETH+USD-starting_usd-starting_eth)
+            'Returns in USD': unfrac(self.get_total_value()-self.starting_total_value),
             # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': unfrac(self.get_total_value()/self.current_price),
+            'Returns in ETH': unfrac((self.get_total_value()-self.starting_total_value)/self.current_price),
+            # Mean Annual % Return (aka average)
+            'Mean Annual % Return': round(self.returns_df['% Return'].mean(), 4),
+            # Median Annual % Return (aka middle number)
+            'Median Annual % Return': round(self.returns_df['% Return'].median(), 4),
             # - % Total Returns (in USD)
-            '% Return': unfrac(self.get_returns()),
+            'Final Annual % Return': unfrac(self.get_returns()),
+            # Median-Mean % Return (aka different is the positional average from the numerical average)
+            'Median-Mean % Return': round(self.returns_df['% Return'].median()-self.returns_df['% Return'].mean(), 4),
             # - Total trades made
             'Trades Made': self.trades_made,
             # Average dollar amount made per trade
-            'Flat Return Per Trade': unfrac(self.get_total_value()/self.trades_made),
+            'Flat Return Per Trade': unfrac((self.get_total_value()-self.starting_total_value)/self.trades_made),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
-            '% Return Per Trade': unfrac(self.get_returns()/self.trades_made),
-            # - Volatility of returns (Sharpe Ratio)
-            'Sharpe Ratio of Returns': 'TBA', # sharpe(self.returns_df['Total Value'])
-            # - Volatility of price for time period (Sharpe Ratio)
-            'Sharpe Ratio of Price': 'TBA',
-            # - Negative volatility of price (Sortino Ratio)
-            'Sortino Ratio of Price': 'TBA'
+            '% Return Per Trade': unfrac((self.get_returns())/self.trades_made),
+            # - Risk vs Rewards of returns (Sharpe Ratio)
+            'Sharpe of Returns': self.sharpe_ratio_of_returns(),
+            # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
+            'Sortino of Returns': self.sortino_ratio_of_returns(),
+            # - Volatility of price for time period (standard deviation)
+            'Std of Price': self.price_df['decimal_price'].std()
         }
 
         # Return the values above if we are testing
         if testing:
             print(f'Real Values:\n{value_dict}')
+            print(f'keys: \n{value_dict.keys()}')
             return value_dict
 
-        # Check if csv file with time period name exists in results/time_periods
-            # If not, create it. Name = time period name
-            # If it exists, read it in
-        # Add values to time period df, or update row if it exists
+        # Add values to price_period df, or update row if it exists
             # Rows = strategy
             # Columns = values
-        new_time_period_row = {
-            'Strategy': self.name,
-        }
-        new_time_period_row.update(value_dict)
-        # save df as csv
-        
-        # Check if a csv file for the strategy itself in results/strategies
-            # If not, create it. Name = strategy name
-            # If it exists, read it in
-        # Add values to strategy df, or update row if it exists
-            # Rows = time periods
-            # Columns = values
-        new_strategy_row = {
-            'Time Period': self.price_period_name,
-        }
-        new_strategy_row.update(value_dict)
-        # save df as csv
+        new_results_row(value_dict, table_name=self.price_period_name, row_name='Strategy', row_value=self.name)
 
+        # Add values to strategy df, or update row if it exists
+            # Rows = price periods
+            # Columns = values
+        new_results_row(value_dict, table_name=self.name, row_name='Price Period', row_value=self.price_period_name)
+
+        # Save the returns history for use later
+        returns_history_file_name = f'{self.name}_{self.price_period_name}_returns_history.csv'
+        # save df as csv
+        self.returns_df.to_csv(returns_history_path(returns_history_file_name), index=False)

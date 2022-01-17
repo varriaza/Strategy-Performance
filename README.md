@@ -40,6 +40,9 @@ Strategies to test:
 - Log fit buy and sell every 1 hour
 - Buy and sell based on fear and greed index
 - Combo of fear/greed and log fit
+- DCA buy over night and DCA sell during the day
+- DCA buy over weekends, DCA sell during the weekday
+- DCA buy at weekend nights and DCA sell during weekday days 
 - Simple momentum buy and sell							
 - Neural Network									
 - Other ML?
