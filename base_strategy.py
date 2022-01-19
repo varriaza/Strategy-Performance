@@ -56,7 +56,7 @@ class Strategy:
         price_period_name,
         price_df = pd.DataFrame(),
         starting_eth = 0
-    ) -> None:
+    ):
         # Name of the strategy
         self.name = name
         # Name of the price period given
@@ -68,8 +68,8 @@ class Strategy:
             self.price_df = pd.read_csv(period_path(price_period_name))
         else:
             self.price_df = price_df
-        self.start_time = int(price_df['timestamp'].iloc[0])
-        self.end_time = int(price_df['timestamp'].iloc[-1])
+        self.start_time = int(self.price_df['timestamp'].iloc[0])
+        self.end_time = int(self.price_df['timestamp'].iloc[-1])
         # Index of price_df
         self.current_index = 0
         # This will be in timestamp units (aka seconds)
@@ -83,12 +83,12 @@ class Strategy:
         self.current_eth = frac(starting_eth)
         self.current_time = self.start_time
         # Get price at the first time period
-        self.current_price = frac(price_df['fraction_price'].iloc[0])
+        self.current_price = frac(self.price_df['fraction_price'].iloc[0])
         self.starting_total_value = self.starting_usd + (self.starting_eth*self.current_price)
         self.trades_made = 0
         # Create all of the rows for price_df so we don't have to append rows, just add data
         # Get timestamps from price_df
-        self.returns_df = pd.DataFrame(price_df['timestamp'])
+        self.returns_df = pd.DataFrame(self.price_df['timestamp'])
         # Add other columns we need
         self.returns_df = self.returns_df.append(pd.DataFrame(columns=[
             '# of USD',
@@ -205,7 +205,7 @@ class Strategy:
         sigma = (self.returns_df['% Return'].loc[self.returns_df['% Return'] < 0]/100).std()
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
-    def buy_eth(self, eth_to_buy=0, usd_eth_to_buy=0):
+    def buy_eth(self, usd_eth_to_buy=0, eth_to_buy=0,):
         """
         Buy ETH with USD.
         Raises ValueError if the action would result in negative USD or there are bad inputs.
@@ -222,6 +222,8 @@ class Strategy:
             usd_eth_to_buy = eth_to_buy*self.current_price
 
         if self.current_usd-usd_eth_to_buy < 0:
+            print(f'Buy was for: {unfrac(usd_eth_to_buy)} USD')
+            print(f'Current USD is: {self.current_usd}')
             raise ValueError(
                 'Current USD cannot be negative. There is a logic error in this strategy.'
             )
@@ -318,6 +320,8 @@ class Strategy:
             'Starting USD': unfrac(self.starting_usd),
             # Starting ETH
             'Starting ETH': unfrac(self.starting_eth),
+            # Ending USD
+            'Ending USD': unfrac(self.current_usd),
             # Ending ETH
             'Ending ETH': unfrac(self.current_eth),
             # - Total ending value in USD (aka ending ETH+USD-starting_usd-starting_eth)
