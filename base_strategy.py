@@ -347,7 +347,7 @@ class Strategy:
             # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
             'Sortino of Returns': self.sortino_ratio_of_returns(),
             # - Volatility of price for time period (standard deviation)
-            'Std of Price': self.price_df['decimal_price'].std()
+            'Std of Price': round(self.price_df['decimal_price'].std(), 2)
         }
 
         # Return the values above if we are testing

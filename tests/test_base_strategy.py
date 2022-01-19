@@ -727,7 +727,7 @@ def test_add_data_to_results():
             # # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
             # 'Sortino of Returns': nan, # we have no real returns
             # - Volatility of price for time period (standard deviation)
-            'Std of Price': testing_strat.price_df['decimal_price'].std()
+            'Std of Price': round(testing_strat.price_df['decimal_price'].std(), 2)
     }
 
     real_values = testing_strat.add_data_to_results(testing=True)
@@ -805,7 +805,7 @@ def test_add_data_new_row():
         '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
         'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
         'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
     })
     # Open resulting file and see if the row was added as expected
     real_price_periods_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name))
@@ -830,7 +830,7 @@ def test_add_data_new_row():
         '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
         'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
         'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
     })
     # Open resulting file and see if the row was added as expected
     real_strategy_data = pd.read_csv(bs.strategy_results_path(testing_strat.name))
@@ -902,7 +902,7 @@ def test_add_data_update_row():
         '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
         'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
         'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
     })
     strategy_expected_row = pd.DataFrame({
         'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
@@ -922,7 +922,7 @@ def test_add_data_update_row():
         '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
         'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
         'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [testing_strat.price_df['decimal_price'].std()]
+        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
     })
 
     # Open resulting file and see if the row was added as expected
