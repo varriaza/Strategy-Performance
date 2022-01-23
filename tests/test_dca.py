@@ -1,12 +1,8 @@
 """
 Testing for the base dca strategy class
 """
-import os
-from fractions import Fraction as frac
 import pytest as pt
-import pandas as pd
 import base_strategy as bs
-import test_base_strategy as tbs
 from specific_strategies import dca
 
 def test_1_day():
