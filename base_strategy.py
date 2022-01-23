@@ -331,14 +331,19 @@ class Strategy:
             self.returns_df['# of ETH']*self.returns_df['fraction_price'].apply(lambda x: frac(x)))
         # Convert seconds to year (account for a fourth of a leap year day)
         seconds_in_year = 60*60*24*365.25
-        fraction_of_year = (self.returns_df['timestamp']-self.start_time)/frac(seconds_in_year)
+        # figure out how far into a year we are so we can annualize the returns
+        # Use lambda as dataframes don't play nicely with fractions
+        fraction_of_year = self.returns_df['timestamp'].apply(lambda x:
+            frac(x-self.start_time)/
+            frac(seconds_in_year)
+        )
         # Remove the first entry in fraction_of_year as it will be 0
         fraction_of_year = fraction_of_year.drop([0])
         # Set first yearly return to zero so we don't have to divide by 0 in the next section
         self.returns_df.loc[0, ('% Return')] = 0
         # Then don't change the first entry
         self.returns_df.loc[1:, ('% Return')] = (
-            (self.returns_df['Total Value'].drop([0])*100/unfrac(self.starting_total_value))-100
+            (self.returns_df['Total Value'].drop([0])*100/self.starting_total_value)-100
             )/fraction_of_year
             # ^ be careful of dividing by 0
 
