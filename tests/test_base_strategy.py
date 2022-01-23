@@ -710,10 +710,10 @@ def test_add_data_to_results():
             'Ending USD': bs.unfrac(testing_strat.current_usd),
             # Ending ETH
             'Ending ETH': bs.unfrac(testing_strat.current_eth),
+            # Final total value in USD (USD + ETH)
+            'Total Value in USD': bs.unfrac(testing_strat.get_total_value()),
             # - Total ending value in USD (aka ending ETH+USD)
             'Returns in USD': bs.unfrac(frac(100)+final_price-frac(100)),
-            # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': bs.unfrac(frac(1)),
             # Mean Annual % Return (aka average)
             'Mean Annual % Return': round(testing_strat.returns_df['% Return'].mean(), 4),
             # Median Annual % Return (aka middle number)
@@ -796,7 +796,8 @@ def test_add_data_new_row():
     price_periods_expected_row = pd.DataFrame({
         'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.4971],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -821,7 +822,8 @@ def test_add_data_new_row():
     strategy_expected_row = pd.DataFrame({
         'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())]
+        ,'Returns in USD': [13.4971],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -893,7 +895,8 @@ def test_add_data_update_row():
     price_periods_expected_row = pd.DataFrame({
         'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.4971],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -913,7 +916,8 @@ def test_add_data_update_row():
     strategy_expected_row = pd.DataFrame({
         'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Returns in USD': [13.4971], 'Returns in ETH': [0.0134],
+        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.4971],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -1010,6 +1014,6 @@ def test_returns_history():
 if __name__ == "__main__":
     # Start clean
     delete_test_files()
-    pt.main()
+    pt.main(['tests/test_base_strategy.py'])
     # Clean up
     delete_test_files()

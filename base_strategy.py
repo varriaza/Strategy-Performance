@@ -57,8 +57,11 @@ class Strategy:
         time_between_action,
         price_period_name,
         price_df = pd.DataFrame(),
-        starting_eth = 0
+        starting_eth = 0,
+        save_results = True
     ):
+        # Save if we should save the results of this run (used to stop tests adding info)
+        self.save_results = save_results
         # Name of the strategy
         self.name = name
         # Name of the price period given
@@ -376,10 +379,10 @@ class Strategy:
             'Ending USD': unfrac(self.current_usd),
             # Ending ETH
             'Ending ETH': unfrac(self.current_eth),
+            # Final total value in USD (USD + ETH)
+            'Total Value in USD': unfrac(self.get_total_value()),
             # - Total ending value in USD (aka ending ETH+USD-starting_usd-starting_eth)
             'Returns in USD': unfrac(self.get_total_value()-self.starting_total_value),
-            # - Returns in # ETH (aka ending ETH+USD in ETH value)
-            'Returns in ETH': unfrac((self.get_total_value()-self.starting_total_value)/self.current_price),
             # Mean Annual % Return (aka average)
             'Mean Annual % Return': round(self.returns_df['% Return'].mean(), 4),
             # Median Annual % Return (aka middle number)
@@ -408,17 +411,19 @@ class Strategy:
             print(f'keys: \n{value_dict.keys()}')
             return value_dict
 
-        # Add values to price_period df, or update row if it exists
-            # Rows = strategy
-            # Columns = values
-        new_results_row(value_dict, table_name=self.price_period_name, row_name='Strategy', row_value=self.name)
+        # See if we need to save the results
+        if self.save_results:
+            # Add values to price_period df, or update row if it exists
+                # Rows = strategy
+                # Columns = values
+            new_results_row(value_dict, table_name=self.price_period_name, row_name='Strategy', row_value=self.name)
 
-        # Add values to strategy df, or update row if it exists
-            # Rows = price periods
-            # Columns = values
-        new_results_row(value_dict, table_name=self.name, row_name='Price Period', row_value=self.price_period_name)
+            # Add values to strategy df, or update row if it exists
+                # Rows = price periods
+                # Columns = values
+            new_results_row(value_dict, table_name=self.name, row_name='Price Period', row_value=self.price_period_name)
 
-        # Save the returns history for use later
-        returns_history_file_name = f'{self.name}_{self.price_period_name}_returns_history.csv'
-        # save df as csv
-        self.returns_df.to_csv(returns_history_path(returns_history_file_name), index=False)
+            # Save the returns history for use later
+            returns_history_file_name = f'{self.name}_{self.price_period_name}_returns_history.csv'
+            # save df as csv
+            self.returns_df.to_csv(returns_history_path(returns_history_file_name), index=False)
