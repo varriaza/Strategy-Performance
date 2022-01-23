@@ -22,6 +22,7 @@ Time periods to test:
 - Low to high to low
 
 Strategies to test:
+- 100% all in
 - DCA every 1 month									
 - DCA every 14 days									
 - DCA every 7 days									

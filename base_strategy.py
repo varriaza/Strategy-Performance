@@ -6,7 +6,9 @@ from fractions import Fraction as frac
 import pandas as pd
 
 class LoopComplete(Exception):
-    pass
+    """
+    Raised to indicate that the loop has reached the end of the price_period csv.
+    """
 
 def unfrac(fraction, round_to=4):
     """Turn a fraction into a float rounded to the fourth decimal."""
@@ -70,6 +72,7 @@ class Strategy:
             self.price_df = price_df
         self.start_time = int(self.price_df['timestamp'].iloc[0])
         self.end_time = int(self.price_df['timestamp'].iloc[-1])
+        self.max_index = int(self.price_df.index.values[-1])
         # Index of price_df
         self.current_index = 0
         # This will be in timestamp units (aka seconds)
@@ -87,18 +90,19 @@ class Strategy:
         self.starting_total_value = self.starting_usd + (self.starting_eth*self.current_price)
         self.trades_made = 0
         # Create all of the rows for price_df so we don't have to append rows, just add data
-        # Get timestamps from price_df
-        self.returns_df = pd.DataFrame(self.price_df['timestamp'])
+        # Get timestamps and fraction_price from price_df
+        self.returns_df = pd.DataFrame(self.price_df[['timestamp', 'fraction_price', 'decimal_price']])
         # Add other columns we need
         self.returns_df = self.returns_df.append(pd.DataFrame(columns=[
             '# of USD',
             '# of ETH',
             'Total Value',
-            '% Return']))
+            '% Return'
+        ]))
         # Rename the index to 'index'
         self.returns_df.index.names = ['index']
         # Make sure the first row has initial data
-        self.add_to_returns()
+        self.add_to_returns(time_slice=(self.price_df['timestamp'] == self.current_time))
 
     def run_logic(self):
         """
@@ -109,21 +113,44 @@ class Strategy:
 
     def go_to_next_action(self):
         """
-        Move time forward until the next buy period.
+        Move time forward until the next buy period in an optimized way.
         Raise LoopComplete when we reach the last index.
+        Optimized version.
         """
-        stepping_start = self.current_time
-        # Loop until we find a value past our time+delta time.
-        while self.current_time < stepping_start+self.time_between_action:
-            # Update returns before we step to capture buys and sells done in current time
-            self.add_to_returns()
-            self.current_index += 1
-            # Stop looping and show the strategy we are finished when we try to go past the last index.
-            if self.current_index > self.price_df.index[-1]:
-                raise LoopComplete('All done')
+        # get all values between time+delta_time
+        time_slice = ((self.price_df['timestamp'] >= self.current_time) &
+            (self.price_df['timestamp'] < self.current_time+self.time_between_action))
+
+        # add_to_returns for all values given
+        self.add_to_returns(time_slice)
+        # Go to the final index + 1
+        self.current_index = int(self.price_df.loc[time_slice].index[-1])+1
+        # stop if done looping
+        if self.current_index > self.price_df.index[-1]: # pylint: disable=no-member
+            # set index to last value
+            self.current_index = int(self.price_df.index[-1]) # pylint: disable=no-member
+            # update current time/price for last values
             self.current_time = self.price_df['timestamp'].iloc[self.current_index]
             # Update price so we can update total value/total returns
             self.current_price = frac(self.price_df['fraction_price'].iloc[self.current_index])
+            raise LoopComplete('All done')
+        # update current time/price for latest index values
+        self.current_time = self.price_df['timestamp'].iloc[self.current_index]
+        # Update price so we can update total value/total returns
+        self.current_price = frac(self.price_df['fraction_price'].iloc[self.current_index])
+
+    def add_to_returns(self, time_slice):
+        """
+        Called on buy or sell. Adds current values to returns df.
+        Optimized version.
+        """
+        self.returns_df.loc[time_slice, [
+            '# of USD',
+            '# of ETH'
+        ]] = [
+            unfrac(self.current_usd),
+            unfrac(self.current_eth),
+        ]
 
     def get_total_value(self):
         """
@@ -149,22 +176,6 @@ class Strategy:
             returns = return_val/fraction_of_year
         return returns
 
-    def add_to_returns(self):
-        """
-        Called on buy or sell. Adds current values to returns df.
-        """
-        self.returns_df.loc[self.current_index, [
-            '# of USD',
-            '# of ETH',
-            'Total Value',
-            '% Return'
-        ]] = [
-            unfrac(self.current_usd),
-            unfrac(self.current_eth),
-            unfrac(self.get_total_value()),
-            unfrac(self.get_returns())
-        ]
-
     def sharpe_ratio_of_returns(self):
         """
         Calculate the sharpe ratio of a column for a dataframe. This is a measure of risk vs reward.
@@ -182,12 +193,16 @@ class Strategy:
         average_annual_expected_return = (returns/100).mean()
         annual_risk_free_return = .03
         sigma = (self.returns_df['% Return']/100).std()
+        # If we have all the same return, like 0, then the std is 0.
+        # This makes the sharpe ratio undefined due to dividing by zero
+        if pd.isna(sigma):
+            return 'undefined'
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
     def sortino_ratio_of_returns(self):
         """
         Calculate the sortino ratio of a column for a dataframe. This is a measure of risk vs reward.
-        However, sortino only uses negative volatility as risk.
+        However, sortino only uses negative volatility as risk/sigma.
         Higher numbers offer better reward for how risky (volatile) they are.
         Formula is as follows:
         sortino ratio = ((average_annual_expected_return)-(annual_risk_free_return))/(sigma)
@@ -203,6 +218,9 @@ class Strategy:
         annual_risk_free_return = .03
         # Only use returns that are less than 0
         sigma = (self.returns_df['% Return'].loc[self.returns_df['% Return'] < 0]/100).std()
+        # If we have no negative returns, the sortino ratio is undefined due to dividing by zero
+        if pd.isna(sigma):
+            return 'undefined'
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
     def buy_eth(self, usd_eth_to_buy=0, eth_to_buy=0,):
@@ -223,7 +241,9 @@ class Strategy:
 
         if self.current_usd-usd_eth_to_buy < 0:
             print(f'Buy was for: {unfrac(usd_eth_to_buy)} USD')
-            print(f'Current USD is: {self.current_usd}')
+            print(f'Current USD is: {unfrac(self.current_usd)}')
+            print(f'Current time is: {self.current_time}')
+            print(f'Current index is: {self.current_index}')
             raise ValueError(
                 'Current USD cannot be negative. There is a logic error in this strategy.'
             )
@@ -304,6 +324,33 @@ class Strategy:
             # save df as csv
             price_period_df.to_csv(path_to_results, index=False)
             # END of function
+
+        # Now, at the end in vector calculate Total Value and yearly_%_return
+        # Use lambda function to make sure we have a fraction and not a string
+        self.returns_df['Total Value'] = self.returns_df['# of USD']+(
+            self.returns_df['# of ETH']*self.returns_df['fraction_price'].apply(lambda x: frac(x)))
+        # Convert seconds to year (account for a fourth of a leap year day)
+        seconds_in_year = 60*60*24*365.25
+        fraction_of_year = (self.returns_df['timestamp']-self.start_time)/frac(seconds_in_year)
+        # Remove the first entry in fraction_of_year as it will be 0
+        fraction_of_year = fraction_of_year.drop([0])
+        # Set first yearly return to zero so we don't have to divide by 0 in the next section
+        self.returns_df.loc[0, ('% Return')] = 0
+        # Then don't change the first entry
+        self.returns_df.loc[1:, ('% Return')] = (
+            (self.returns_df['Total Value'].drop([0])*100/unfrac(self.starting_total_value))-100
+            )/fraction_of_year
+            # ^ be careful of dividing by 0
+
+        # Round the new columns, Total Value and % Return
+        # Break into two columns so we can use astype, otherwise we can get problems due to typing
+        self.returns_df['Total Value'] = self.returns_df['Total Value'].astype(float).round(4)
+        self.returns_df['% Return'] = self.returns_df['% Return'].astype(float).round(4)
+
+        # drop fraction_price
+        self.returns_df = self.returns_df.drop(['fraction_price'], axis = 1)
+        # rename decimal_price to price
+        self.returns_df.rename(columns = {'decimal_price':'price'}, inplace = True)
 
         # Calculate values
         # Make this a dictionary that we can add where needed

@@ -90,7 +90,11 @@ def create_strat_class():
     starting_usd = 100.0
     time_between_action = 5
     price_period_name = 'test_period'
-    price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'fraction_price':[frac(1),frac(2),frac(3),frac(4),frac(5)]})
+    price_df = pd.DataFrame({
+        'timestamp': [1,2,3,4,5],
+        'fraction_price': [frac(1),frac(2),frac(3),frac(4),frac(5)],
+        'decimal_price': [1.0, 2.0, 3.0, 4.0, 5.0]
+    })
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -123,7 +127,11 @@ def test_init():
     starting_usd = 100.0
     time_between_action = 5
     price_period_name = 'test_period'
-    price_df = pd.DataFrame({'timestamp':[1,2,3,4,5], 'fraction_price':[frac(1),frac(2),frac(3),frac(4),frac(5)]})
+    price_df = pd.DataFrame({
+        'timestamp': [1,2,3,4,5],
+        'fraction_price': [frac(1),frac(2),frac(3),frac(4),frac(5)],
+        'decimal_price': [1.0, 2.0, 3.0, 4.0, 5.0]
+    })
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -156,27 +164,23 @@ def test_init():
     # Get price at the first time period
     assert testing_strat.current_price == price_df['fraction_price'].iloc[0]
     assert testing_strat.trades_made == 0
-    # Get timestamps from price_df
-    expected_returns_df = pd.DataFrame(price_df['timestamp'])
-    # Add other columns we need
-    expected_returns_df = expected_returns_df.append(pd.DataFrame(columns=[
-        '# of USD',
-        '# of ETH',
-        'Total Value',
-        '% Return'
-    ]))
-    expected_returns_df.loc[0,[
-        '# of USD',
-        '# of ETH',
-        'Total Value',
-        '% Return'
-    ]] = [
-        starting_usd,
-        0,
-        testing_strat.get_total_value(),
-        testing_strat.get_returns()
-    ]
-    assert compare_df(testing_strat.returns_df, expected_returns_df)
+    # Test that retruns_df updates
+    expected_returns_df = pd.DataFrame({
+        'timestamp': [1],
+        'fraction_price': [frac(1)],
+        'decimal_price': [1.0],
+        '# of USD': [testing_strat.starting_usd],
+        '# of ETH': [0]
+        # Drop 'Total Value' and '% Return' as they will be null
+        # 'Total Value':
+        # '% Return':
+    })
+    # We only want to look at the first row as the others will have null values
+    # We have not done any buys or moved forward in time
+    assert compare_df(
+        testing_strat.returns_df.iloc[0].drop(['Total Value', '% Return']),
+        expected_returns_df.iloc[0]
+    )
 
 def test_run_logic():
     """
@@ -242,22 +246,21 @@ def test_go_to_next_action():
     # Test that index updates
     assert old_index == 0
     assert testing_strat.current_index == 2
-    # make var as we will use in two places
-    total_value = frac(price_df['fraction_price'].iloc[1]) + testing_strat.current_usd
-    delta_t = float(testing_strat.current_time-60 - testing_strat.start_time)
-    # convert seconds to year (account for a fourth of a leap year day)
-    seconds_in_year = 60*60*24*365.25
-    fraction_of_year = frac(delta_t)/frac(seconds_in_year)
-    return_val = (total_value*frac(100)/testing_strat.starting_total_value)-frac(100)
     # Test that retruns_df updates
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[1]],
+        'fraction_price': [price_df['fraction_price'].iloc[1]],
+        'decimal_price': [price_df['decimal_price'].iloc[1]],
         '# of USD': [testing_strat.starting_usd],
         '# of ETH': [frac(1)],
-        'Total Value': [bs.unfrac(total_value)],
-        '% Return': [bs.unfrac(return_val/fraction_of_year)]
+        # Drop 'Total Value' and '% Return' as they will be null
+        # 'Total Value':
+        # '% Return': 
     })
-    assert compare_df(testing_strat.returns_df.iloc[testing_strat.current_index-1],expected_returns_df.iloc[-1])
+    assert compare_df(
+        testing_strat.returns_df.iloc[testing_strat.current_index-1].drop(['Total Value', '% Return']),
+        expected_returns_df.iloc[-1]
+    )
 
 def test_go_to_end():
     """
@@ -344,22 +347,21 @@ def test_go_to_next_action_big_skip():
     # Test that index updates
     assert old_index == 0
     assert testing_strat.current_index == 27
-    # make var as we will use in two places
-    total_value = frac(price_df['fraction_price'].iloc[26]) + testing_strat.current_usd
-    delta_t = float(testing_strat.current_time-60 - testing_strat.start_time)
-    # convert seconds to year (account for a fourth of a leap year day)
-    seconds_in_year = 60*60*24*365.25
-    fraction_of_year = frac(delta_t)/frac(seconds_in_year)
-    return_val = (total_value*frac(100)/testing_strat.starting_total_value)-frac(100)
     # Test that retruns_df updates
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[26]],
+        'fraction_price': [price_df['fraction_price'].iloc[26]],
+        'decimal_price': [price_df['decimal_price'].iloc[26]],
         '# of USD': [testing_strat.starting_usd],
         '# of ETH': [bs.unfrac(frac(1))],
-        'Total Value': [bs.unfrac(total_value)],
-        '% Return': [bs.unfrac(return_val/fraction_of_year)]
+        # Drop 'Total Value' and '% Return' as they will be null
+        # 'Total Value':
+        # '% Return':
     })
-    assert compare_df(testing_strat.returns_df.iloc[testing_strat.current_index-1],expected_returns_df.iloc[-1])
+    assert compare_df(
+        testing_strat.returns_df.iloc[testing_strat.current_index-1].drop(['Total Value', '% Return']),
+        expected_returns_df.iloc[-1]
+    )
 
 def setup_buy_and_sell_strat():
     """
@@ -681,13 +683,20 @@ def test_add_data_to_results():
     )
     # Give the strategy 1 eth for testing
     testing_strat.current_eth = frac(1)
+    # Go to the end
+    try:
+        while True:
+            testing_strat.go_to_next_action()
+    except bs.LoopComplete:
+        pass
     # Set trades
     testing_strat.trades_made = 10
     start_price = frac('6643518635371397/8796093022208')
     final_price = frac('8862206656386171/8796093022208')
-    # If we are calling this function, we should be at the end of the price_df
+    
     testing_strat.current_price = final_price
-
+    # If we are calling this function, we should be at the end of the price_df
+    real_values = testing_strat.add_data_to_results(testing=True)
     expected_value_dict = {
             # - Price delta (start to end)
             'Price Delta': bs.unfrac(frac(final_price)-frac(start_price)),
@@ -722,17 +731,14 @@ def test_add_data_to_results():
             'Flat Return Per Trade': bs.unfrac((frac(100-100)+final_price)/10),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
             '% Return Per Trade': bs.unfrac((testing_strat.get_returns())/10),
-            # # - Risk vs Rewards of returns (Sharpe Ratio)
-            # 'Sharpe of Returns': nan, # we have no real returns
-            # # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
-            # 'Sortino of Returns': nan, # we have no real returns
+            # - Risk vs Rewards of returns (Sharpe Ratio)
+            'Sharpe of Returns': testing_strat.sharpe_ratio_of_returns(),
+            # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
+            'Sortino of Returns': 'undefined', # we have no negative returns for this testing price_period
             # - Volatility of price for time period (standard deviation)
             'Std of Price': round(testing_strat.price_df['decimal_price'].std(), 2)
     }
 
-    real_values = testing_strat.add_data_to_results(testing=True)
-    # drop NA values (Sharpe and Sortino) due to no real returns
-    real_values = {k: v for k, v in real_values.items() if pd.Series(v).notna().all()}
     assert compare_dicts(expected_value_dict, real_values)
 
 def test_add_data_new_row():
