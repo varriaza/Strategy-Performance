@@ -46,7 +46,7 @@ def period_path(csv):
     # Make sure we have the file ending
     if csv[-4:] != '.csv':
         csv = csv + '.csv'
-    return f'csv_files\\price_periods\\{csv}'
+    return f'price_period_csv\\{csv}'
 
 class Strategy:
     """Base strategy class, specific strategies should inherent this."""
