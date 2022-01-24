@@ -389,11 +389,11 @@ def test_buy_usd_eth():
 
     # assert ending USD = start-buy
     assert test_strat.current_usd == starting_usd-usd_buy
-    # assert ending ETH = start+buy
+    # assert ending ETH = start+(buy-trading_fee)
     assert bs.unfrac(test_strat.current_eth) == bs.unfrac(
         starting_eth + (usd_buy/test_strat.current_price)*test_strat.trading_fee)
     # assert total value does change when buying due to trading_fee
-    assert test_strat.get_total_value() != starting_total_value
+    assert test_strat.get_total_value() == starting_total_value - test_strat.fees_paid
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -479,7 +479,7 @@ def test_buy_eth():
     # assert ending ETH = start+buy
     assert test_strat.current_eth == starting_eth + frac(eth_buy)*test_strat.trading_fee
     # assert total value does change when buying due to trading_fee
-    assert test_strat.get_total_value() != starting_total_value
+    assert test_strat.get_total_value() == starting_total_value - test_strat.fees_paid
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -568,7 +568,7 @@ def test_sell_usd_eth():
     # assert ending ETH = start-sell
     assert test_strat.current_eth == starting_eth - (usd_sell/test_strat.current_price)
     # assert total value does change when buying due to trading_fee
-    assert test_strat.get_total_value() != starting_total_value
+    assert test_strat.get_total_value() == starting_total_value - test_strat.fees_paid
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -590,7 +590,7 @@ def test_sell_eth():
     assert test_strat.current_eth == starting_eth - eth_sell
     # assert total value doesn't change when selling
     # assert total value does change when buying due to trading_fee
-    assert test_strat.get_total_value() != starting_total_value
+    assert test_strat.get_total_value() == starting_total_value - test_strat.fees_paid
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -727,6 +727,8 @@ def test_add_data_to_results():
             ),
             # - Total trades made
             'Trades Made': 10,
+            # total fees paid in USD
+            'Fees Paid': 0, # because we don't actually 'trade'
             # Average dollar amount made per trade
             'Flat Return Per Trade': bs.unfrac((frac(100-100)+final_price)/10),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
@@ -805,7 +807,7 @@ def test_add_data_new_row():
             testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
             4
         )],
-        'Trades Made': [testing_strat.trades_made],
+        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
         'Flat Return Per Trade': [
             bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
         ],
@@ -831,7 +833,7 @@ def test_add_data_new_row():
             testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
             4
         )],
-        'Trades Made': [testing_strat.trades_made],
+        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
         'Flat Return Per Trade': [
             bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
         ],
@@ -904,7 +906,7 @@ def test_add_data_update_row():
             testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
             4
         )],
-        'Trades Made': [testing_strat.trades_made],
+        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
         'Flat Return Per Trade': [
             bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
         ],
@@ -925,7 +927,7 @@ def test_add_data_update_row():
             testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
             4
         )],
-        'Trades Made': [testing_strat.trades_made],
+        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
         'Flat Return Per Trade': [
             bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
         ],

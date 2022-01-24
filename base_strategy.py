@@ -94,6 +94,8 @@ class Strategy:
         self.trades_made = 0
         # set trading fee, using uniswap's 0.3%. Aka 100-0.3=99.7
         self.trading_fee = frac(99.7/100)
+        # Keep track of fees paid
+        self.fees_paid = frac(0)
         # Create all of the rows for price_df so we don't have to append rows, just add data
         # Get timestamps and fraction_price from price_df
         self.returns_df = pd.DataFrame(self.price_df[['timestamp', 'fraction_price', 'decimal_price']])
@@ -254,7 +256,12 @@ class Strategy:
             )
         # deduct the trading fee from the ETH that is returned
         # trading_fee is formatted as x/100, where x=100-fee
-        self.current_eth += (usd_eth_to_buy/self.current_price)*self.trading_fee
+        eth_amount_to_buy = usd_eth_to_buy/self.current_price
+        # Make the fee denominated in USD and ETH for each use case
+        eth_fee = (eth_amount_to_buy*(frac(1)-self.trading_fee))
+        usd_fee = usd_eth_to_buy*(frac(1)-self.trading_fee)
+        self.fees_paid += usd_fee
+        self.current_eth += eth_amount_to_buy-eth_fee
         self.current_usd -= usd_eth_to_buy
         self.trades_made += 1
 
@@ -280,8 +287,12 @@ class Strategy:
             )
         # deduct the trading fee from the USD that is returned
         # trading_fee is formatted as x/100, where x=100-fee
+        amount_to_sell = eth_to_sell*self.current_price
+        # The fee only needs to be denominated in USD for sells
+        usd_fee = amount_to_sell*(frac(1)-self.trading_fee)
+        self.fees_paid += usd_fee
         self.current_eth -= eth_to_sell
-        self.current_usd += (eth_to_sell*self.current_price)*self.trading_fee
+        self.current_usd += amount_to_sell-usd_fee
         self.trades_made += 1
 
     def add_data_to_results(self, testing=False):
@@ -399,6 +410,8 @@ class Strategy:
             'Median-Mean % Return': round(self.returns_df['% Return'].median()-self.returns_df['% Return'].mean(), 4),
             # - Total trades made
             'Trades Made': self.trades_made,
+            # Fees paid
+            'Fees Paid': unfrac(self.fees_paid),
             # Average dollar amount made per trade
             'Flat Return Per Trade': unfrac((self.get_total_value()-self.starting_total_value)/self.trades_made),
             # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
