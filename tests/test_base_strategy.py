@@ -255,7 +255,7 @@ def test_go_to_next_action():
         '# of ETH': [frac(1)],
         # Drop 'Total Value' and '% Return' as they will be null
         # 'Total Value':
-        # '% Return': 
+        # '% Return':
     })
     assert compare_df(
         testing_strat.returns_df.iloc[testing_strat.current_index-1].drop(['Total Value', '% Return']),
@@ -429,7 +429,7 @@ def test_get_returns():
     # convert seconds to year (account for a fourth of a leap year day)
     seconds_in_year = 60*60*24*365.25
     fraction_of_year = frac(delta_t)/frac(seconds_in_year)
-    
+
     test_strat = setup_buy_and_sell_strat()
     # Standardize our time passed as 1 day in seconds
     test_strat.current_time += int(60*60*24)
@@ -693,7 +693,7 @@ def test_add_data_to_results():
     testing_strat.trades_made = 10
     start_price = frac('6643518635371397/8796093022208')
     final_price = frac('8862206656386171/8796093022208')
-    
+
     testing_strat.current_price = final_price
     # If we are calling this function, we should be at the end of the price_df
     real_values = testing_strat.add_data_to_results(testing=True)
