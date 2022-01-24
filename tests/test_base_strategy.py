@@ -390,9 +390,10 @@ def test_buy_usd_eth():
     # assert ending USD = start-buy
     assert test_strat.current_usd == starting_usd-usd_buy
     # assert ending ETH = start+buy
-    assert test_strat.current_eth == starting_eth + (usd_buy/test_strat.current_price)
-    # assert total value doesn't change when buying
-    assert test_strat.get_total_value() == starting_total_value
+    assert bs.unfrac(test_strat.current_eth) == bs.unfrac(
+        starting_eth + (usd_buy/test_strat.current_price)*test_strat.trading_fee)
+    # assert total value does change when buying due to trading_fee
+    assert test_strat.get_total_value() != starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -476,9 +477,9 @@ def test_buy_eth():
     # assert ending USD = start-buy
     assert test_strat.current_usd == starting_usd-(frac(eth_buy)*test_strat.current_price)
     # assert ending ETH = start+buy
-    assert test_strat.current_eth == starting_eth + frac(eth_buy)
-    # assert total value doesn't change when buying
-    assert test_strat.get_total_value() == starting_total_value
+    assert test_strat.current_eth == starting_eth + frac(eth_buy)*test_strat.trading_fee
+    # assert total value does change when buying due to trading_fee
+    assert test_strat.get_total_value() != starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -563,12 +564,11 @@ def test_sell_usd_eth():
     test_strat.sell_eth(usd_eth_to_sell=usd_sell)
 
     # assert ending USD = start+sell
-    assert test_strat.current_usd == starting_usd+usd_sell
+    assert test_strat.current_usd == starting_usd+(usd_sell*test_strat.trading_fee)
     # assert ending ETH = start-sell
     assert test_strat.current_eth == starting_eth - (usd_sell/test_strat.current_price)
-    # assert total value doesn't change when selling
-    # This check is only to make sure no value is lost on a transaction
-    assert test_strat.get_total_value() == starting_total_value
+    # assert total value does change when buying due to trading_fee
+    assert test_strat.get_total_value() != starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -585,12 +585,12 @@ def test_sell_eth():
     test_strat.sell_eth(eth_to_sell=eth_sell)
 
     # assert ending USD = start+sell
-    assert test_strat.current_usd == starting_usd+(eth_sell*test_strat.current_price)
+    assert test_strat.current_usd == starting_usd+(eth_sell*test_strat.current_price*test_strat.trading_fee)
     # assert ending ETH = start-sell
     assert test_strat.current_eth == starting_eth - eth_sell
     # assert total value doesn't change when selling
-    # This check is only to make sure no value is lost on a transaction
-    assert test_strat.get_total_value() == starting_total_value
+    # assert total value does change when buying due to trading_fee
+    assert test_strat.get_total_value() != starting_total_value
     # assert trades_made is incremented by 1
     assert test_strat.trades_made == starting_trade_num+1
 
@@ -796,8 +796,8 @@ def test_add_data_new_row():
     price_periods_expected_row = pd.DataFrame({
         'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
-        'Returns in USD': [13.4971],
+        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -822,8 +822,8 @@ def test_add_data_new_row():
     strategy_expected_row = pd.DataFrame({
         'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())]
-        ,'Returns in USD': [13.4971],
+        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -895,8 +895,8 @@ def test_add_data_update_row():
     price_periods_expected_row = pd.DataFrame({
         'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
-        'Returns in USD': [13.4971],
+        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
@@ -916,8 +916,8 @@ def test_add_data_update_row():
     strategy_expected_row = pd.DataFrame({
         'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0531], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
-        'Returns in USD': [13.4971],
+        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
         'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],

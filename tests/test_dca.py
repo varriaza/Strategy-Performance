@@ -31,8 +31,8 @@ def test_1_day():
     # we should always end up with no USD left
     assert dca_strategy.current_usd == 0
     # make sure we end up with the expected amount of ETH
-    expected_eth = 11.8581
-    assert bs.unfrac(dca_strategy.current_eth) == expected_eth
+    expected_eth = 11.8226
+    assert bs.unfrac(dca_strategy.current_eth) == bs.unfrac(expected_eth)
 
 def test_longer_than_price_period():
     """
@@ -85,8 +85,8 @@ def test_28_days():
     # we should always end up with no USD left
     assert dca_strategy.current_usd == 0
     # make sure we end up with the expected amount of ETH
-    expected_eth = 9.9768
-    assert bs.unfrac(dca_strategy.current_eth) == expected_eth
+    expected_eth = 9.9468
+    assert bs.unfrac(dca_strategy.current_eth) == bs.unfrac(expected_eth)
 
 if __name__ == "__main__":
     pt.main(['tests/test_dca.py'])

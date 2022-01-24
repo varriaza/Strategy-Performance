@@ -92,6 +92,8 @@ class Strategy:
         self.current_price = frac(self.price_df['fraction_price'].iloc[0])
         self.starting_total_value = self.starting_usd + (self.starting_eth*self.current_price)
         self.trades_made = 0
+        # set trading fee, using uniswap's 0.3%. Aka 100-0.3=99.7
+        self.trading_fee = frac(99.7/100)
         # Create all of the rows for price_df so we don't have to append rows, just add data
         # Get timestamps and fraction_price from price_df
         self.returns_df = pd.DataFrame(self.price_df[['timestamp', 'fraction_price', 'decimal_price']])
@@ -250,7 +252,9 @@ class Strategy:
             raise ValueError(
                 'Current USD cannot be negative. There is a logic error in this strategy.'
             )
-        self.current_eth += usd_eth_to_buy/self.current_price
+        # deduct the trading fee from the ETH that is returned
+        # trading_fee is formatted as x/100, where x=100-fee
+        self.current_eth += (usd_eth_to_buy/self.current_price)*self.trading_fee
         self.current_usd -= usd_eth_to_buy
         self.trades_made += 1
 
@@ -274,8 +278,10 @@ class Strategy:
             raise ValueError(
                 'Current ETH cannot be negative. There is a logic error in this strategy.'
             )
+        # deduct the trading fee from the USD that is returned
+        # trading_fee is formatted as x/100, where x=100-fee
         self.current_eth -= eth_to_sell
-        self.current_usd += eth_to_sell*self.current_price
+        self.current_usd += (eth_to_sell*self.current_price)*self.trading_fee
         self.trades_made += 1
 
     def add_data_to_results(self, testing=False):

@@ -33,7 +33,7 @@ def test_all_in():
     # we should always end up with no USD left
     assert all_in_strategy.current_usd == 0
     # make sure we end up with the expected amount of ETH
-    expected_eth = 13.2401
+    expected_eth = 13.2004
     assert bs.unfrac(all_in_strategy.current_eth) == expected_eth
 
 if __name__ == "__main__":
