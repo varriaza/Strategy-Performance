@@ -1,43 +1,77 @@
 # Strategy-Performance
-Compare how different trading strategies for ETH-USD have behaved over different time periods.
+What is this project about?
+I am looking to compare how different trading strategies for ETH-USD have behaved over different time periods, with a focus on dollar cost averaging. 
 
-ETH Price Data is taken from:
-https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
+Why make this?
+Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regular people looking to start investing in stock.
+It provides hedges against losing value from price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves.
 
-I did not include the data in this repo as it would take decent amount of space and this is very much WIP.
-Price is currently calculated as: (Open+Close+High+Low)/4
-Since the data is captured once a minute, that should be a good enough approximation for my purposes.
-This could pose problems if a strategy trades more often than once a minute.
+Why ETH?
+Ethereum is how I got into the wonderful world of cryptocurrency and DeFi so it only felt natural to use it. However, I have constructed the code to make it very easy to collect data on other pairs. Simply change the API calls to the desired pair then call the strategies with the pair data. In the future I plan to update the code to accept coin names so that the results will automatically update for your desired pair.
 
-Time periods to test:
-- 3 Years	
-- 2 Years	
-- 1 Year	
-- High to low	
-- Low to high	
-- High to high	
-- Low to low	
-- High to medium	
-- Med to high
+What will happen when data collection is finished?
+I will be writing up two summary posts. Both will be uploaded freely to the internet via Reddit, medium or other methods.
+    1) Why we need DCA DeFi apps, aka how much benefit does DCA bring to cryptocurrency investing? Are certain kinds of DCA strategies better than others?
+    2) How do a bunch of strategies compare during different price periods? This is more for the advanced trader rather than investors.
+
+How do I run this?
+- Collect data from kaggle, CoinBase and/or Binance
+    - Created in ini_data.ipynb
+- Create price period data
+    - Make sure your data has prices for all of the price periods you will be creating
+    - Created in ini_data.ipynb
+- Run strategies for price periods you want
+    - Run create_tables.ipynb with your data
+
+ETH Price Data is taken as the average of price from:
+- https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
+- Binance API (WIP)
+- CoinBase Pro API (WIP)
+
+Data Notes:
+- I did not include the source price data in this repo as it would take a decent amount of space and is very much WIP.
+    - I will provide a script that:
+        - can be run to re-create the Binance and CoinBase data.
+        - will format the kaggle data into the format I used.
+    - Anyone will be able to recreate the results I found, add new strategies or look at new crypto pairs.
+- Price is currently calculated as: (Open+Close+High+Low)/4. I then take the average from the three sources I have.
+    - This will minimize price anomalies or large orders throwing my sources off from the rest of the market.
+- Price data is taken every minute, which should be a good enough approximation for my purposes.
+    - This would pose problems if a strategy trades more often than once a minute but I am not planning on creating any like this.
+
+Time periods to test (numbers are timestamps):
+- Past 4 Years
+    - 2018 through 2021
+- Past 3 Years 
+    - 2019 through 2021
+- Past 2 Years 
+    - 2020 through 2021
+- Past 1 Year 
+    - all of 2021 # Low to high to low to high
+- High to low 
+    - 1515870180 (max of 2018) to end of 2018
+    - 1620125000 (before 2021 crash) to 1627000000 (2021 crash low)
+- Low to high 
+    - start of 2020 to 1620125000 (before 2021 crash)
+    - 1627000000 (2021 crash low) to end of 2021
 - Low to high to low
+    - all of 2019
+    - 2021 start to 1627000000 (2021 crash low)
+- High to low to high
+    - 1515870180 (2018) to 1620125000 (before 2021 crash)
+    - 1620125000 (before 2021 crash) to end of 2021
 
 Strategies to test:
-- 100% all in
-- DCA every 1 month									
-- DCA every 14 days									
-- DCA every 7 days									
-- DCA every 1 day
+- 100% all in right away
+- FOMO in only (invest if asset has gone up x% in past y days), don't sell
+- FOMO in and out, FOMO buy and then sell after x% drop in past y days
+- DCA every 1, 7, 14, 30 days									
 - DCA every 1 hour									
-- Moving Avg as indicators for buy and sell (buy and sell)									
-- Log fit (similar to DCA but only buy when price is below log fit) buy every 1 month
-- Log fit buy every 14 days									
-- Log fit buy every 7 days
-- Log fit buy every 1 day	
+- Moving Avg as indicators for buy and sell
+- Log of Moving Avg as indicator for buy and sell						
+- Log fit (similar to DCA but only buy when price is below log fit) buy every 1, 7, 14, 30 days							
 - Log fit buy every 1 hour								
-- Log fit buy (when below) and sell (when above) every 1 month									
-- Log fit buy and sell every 14 days									
-- Log fit buy and sell every 7 days	
-- Log fit buy and sell every 1 day
+- Log fit buy (when below) and sell (when above) every 1, 7, 14, 30 days
 - Log fit buy and sell every 1 hour
 - Buy and sell based on fear and greed index
 - Combo of fear/greed and log fit
@@ -48,87 +82,44 @@ Strategies to test:
 - Neural Network									
 - Other ML?
 
-Extra Info per Strategy per time period:
+Results captured per Strategy per time period:
 - Time period price delta (start to end)
 - Time period % price delta
 - Starting USD
 - Starting ETH
+- Ending USD
 - Ending ETH # different than returns in ETH as that is total value
-- Total returns in USD (aka ending ETH+USD)
-- Total returns in # ETH (aka ending ETH+USD in ETH value)
-- % Total Returns (in USD) 
-- Total trades made
-- Flat Return Per Trade # Average dollar amount made per trade
-- % return per trade (Helps show how intensive a strategy might be, also can be used for fees)
-- Volatility of price for time period (Sharpe Ratio)
-- Negative volatility of price (Sortino Ratio)
+- Total value in USD (total ending value for ETH+USD in USD)
+- Total returns in USD (aka ending ETH+USD in USD minus starting ETH+USD)
+- Mean of the Annualized % Return over time
+- Median of the Annualized % Return over time
+- Final Annualized % Return
+- Median-Mean of the Annualized % Return (Useful to see how big the outlier returns were)
+- Total number of trades made (Helps show how intensive a strategy might be, also can be used for gas fee estimation later)
+- Total of fees paid (.3% is taken off of ever trade to model the Uniswap costs)
+- Flat Return Per Trade (Average dollar amount made per trade)
+- % return per trade
 - Volatility of returns (Sharpe Ratio)
+- Negative volatility of price (Sortino Ratio)
+- Standard deviation of price (Measures volatility of price)
 
-How do I display this?
-- Break each table into specific time periods (I think this is best)
-    - So the Low to low table would have the "Extra Info" as columns and strategies as rows
-        - This way we can compare the strategies in the same time periods
-    - I will also make a table for the strategies overall
-        - aka the "DCA every 1 day" table would have the "Extra Info" as columns and time periods as rows
+How do I save the results?
+- Similar price_period and strategy results are saved together to allow for easy comparison between:
+    - different strategies in the same price period
+    - different price periods for the same strategy
 
 Overall logic Summary:
 - Break price/time data into time periods
-- Make each strategy a class and give them a "run simulation" function
-    - Run simulation has the logic that makes the function actually run
-    - Call each of those functions from a central location (jupyter notebook for nice formatting?) 
+- Make each strategy a class and give them a "run_logic" function
+    - run_logic has the code that makes a strategy work
+        - Aka for DCA it would check if x amount of time has passed, then buys a preset amount
+    - Call each of those functions from a central location (jupyter notebook for nice formatting) 
 - For each strategy, run on each time period
-    - Strategies are their own python script 
-        - Make them classes that inherent from a base strategy class
-        - Base strategy class has (WIP)
-            - Strategy Name
-            - Has current amount of USD
-            - Current amount of ETH
-            - Current date
-            - Current price
-            - \# trades made
-            - Start time # set by strat, referenced by stepping func 
-            - End time # set by strat, referenced by stepping func
-            - A dataframe of returns over time (used for final data analysis)
-                - \# of ETH
-                - \# of USD
-                - Total value in USD
-                - % return from starting USD
-            - Price/Time stepping function
-            - Sell function, takes in (amount) and uses current price
-            - Buy function, takes in (amount) and uses current price
-    - They call a shared price/time movement function
+    - Strategies are classes that inherent from a base strategy class
+        - This allows for multiple variations of strategies, for example, DCA every 1, 7, 14, 30 days.
+    - They call shared functions from the base strategy class like buy/sell, move forward in time and create results
         - Strategy has current time and next time it wants to get price
-        - Loop until current time > next time (but update the returns over time df) 
+        - Loop until current time > next time (but we keep track of the returns over time) 
         - Perform logic, loop more 
 - Save results to a time period results table inside a csv file   
-    - If time period file exists, check if strategy is already a row. If it is, replace it, if not append new data.
-
-Summary (to be implemented):
-- Create csv files for all time frames
-- Create csv with all values for logic that needs to run at the beginning of a strategy for setup (only give the strategy access to data it would have had at the start.)
-- Create strategy in its own python file, make it inherit from base strategy class.
-- Call strategy in Overall jupyter notebook for ease of running and possible loops (see create_tables.ipynb)
-    - Cell creates instance of the specific strategy class
-        - Sets starting value like money, time period and etc
-        - Calls run simulation function
-        - Simulation runs through all data in given time period
-        - Results are saved to relevant tables
-
-Roadmap:
-[ ] - WIP
-[x] - Complete
-
-[ ] Make price period name auto read in the price_df of the same name unless a price_df is supplied 
-[ ] Create DCA strat
-[ ] Test DCA strat on test time period
-[ ] Collect data from DCA on real time period
-[ ] Create all time periods
-[ ] Collect DCA data on all time periods
-[ ] Create Log fit buy
-[ ] Create Log fit buy and sell 
-[ ] Create Buy and sell based on fear and greed index
-[ ] Create Combo of fear/greed and log fit
-[ ] Create Simple momentum buy and sell							
-[ ] Create Neural Network
-[ ] Standardize input as 10k
-[ ] consider adding exchange cost (.03%? aka 3/100) on every trade
+    - If time period file exists, check if the strategy already has a row. If it does, replace it, if not append new data.

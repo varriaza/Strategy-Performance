@@ -408,13 +408,13 @@ class Strategy:
             'Final Annual % Return': unfrac(self.get_returns()),
             # Median-Mean % Return (aka different is the positional average from the numerical average)
             'Median-Mean % Return': round(self.returns_df['% Return'].median()-self.returns_df['% Return'].mean(), 4),
-            # - Total trades made
+            # - Total trades made (Helps show how intensive a strategy might be, also can be used for gas fee estimation later)
             'Trades Made': self.trades_made,
             # Fees paid
             'Fees Paid': unfrac(self.fees_paid),
             # Average dollar amount made per trade
             'Flat Return Per Trade': unfrac((self.get_total_value()-self.starting_total_value)/self.trades_made),
-            # - % return per trade (Helps show how intensive a strategy might be, also can be used for fee estimation)
+            # - % return per trade
             '% Return Per Trade': unfrac((self.get_returns())/self.trades_made),
             # - Risk vs Rewards of returns (Sharpe Ratio)
             'Sharpe of Returns': self.sharpe_ratio_of_returns(),
