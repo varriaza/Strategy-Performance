@@ -1,20 +1,21 @@
 # Strategy-Performance
-What is this project about?
+## What is this project about?
 I am looking to compare how different trading strategies for ETH-USD have behaved over different time periods, with a focus on dollar cost averaging. 
 
-Why make this?
-Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regular people looking to start investing in stock.
-It provides hedges against losing value from price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves.
+## Why make this?
+Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regular people looking to start investing in the stock market.
+It provides hedges against price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves.
 
-Why ETH?
+## Why ETH?
 Ethereum is how I got into the wonderful world of cryptocurrency and DeFi so it only felt natural to use it. However, I have constructed the code to make it very easy to collect data on other pairs. Simply change the API calls to the desired pair then call the strategies with the pair data. In the future I plan to update the code to accept coin names so that the results will automatically update for your desired pair.
 
-What will happen when data collection is finished?
+## What will happen when data collection is finished?
 I will be writing up two summary posts. Both will be uploaded freely to the internet via Reddit, medium or other methods.
     1) Why we need DCA DeFi apps, aka how much benefit does DCA bring to cryptocurrency investing? Are certain kinds of DCA strategies better than others?
     2) How do a bunch of strategies compare during different price periods? This is more for the advanced trader rather than investors.
 
-How do I run this?
+## Code details
+### How do I run this?
 - Collect data from kaggle, CoinBase and/or Binance
     - Created in ini_data.ipynb
 - Create price period data
@@ -23,12 +24,12 @@ How do I run this?
 - Run strategies for price periods you want
     - Run create_tables.ipynb with your data
 
-ETH Price Data is taken as the average of price from:
+### ETH Price Data is taken as the average of price from:
 - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
 - Binance API (WIP)
 - CoinBase Pro API (WIP)
 
-Data Notes:
+### Data Notes:
 - I did not include the source price data in this repo as it would take a decent amount of space and is very much WIP.
     - I will provide a script that:
         - can be run to re-create the Binance and CoinBase data.
@@ -39,7 +40,7 @@ Data Notes:
 - Price data is taken every minute, which should be a good enough approximation for my purposes.
     - This would pose problems if a strategy trades more often than once a minute but I am not planning on creating any like this.
 
-Time periods to test (numbers are timestamps):
+### Time periods to test (numbers are timestamps):
 - Past 4 Years
     - 2018 through 2021
 - Past 3 Years 
@@ -61,12 +62,16 @@ Time periods to test (numbers are timestamps):
     - 1515870180 (2018) to 1620125000 (before 2021 crash)
     - 1620125000 (before 2021 crash) to end of 2021
 
-Strategies to test:
+### Strategies to test:
 - 100% all in right away
-- FOMO in only (invest if asset has gone up x% in past y days), don't sell
+- FOMO in only (buy if asset has gone up more than double digit % in past y days), don't sell
 - FOMO in and out, FOMO buy and then sell after x% drop in past y days
 - DCA every 1, 7, 14, 30 days									
-- DCA every 1 hour									
+- DCA every 1 hour
+- DCA buy over nights and DCA sell during the day
+- DCA buy over weekends, DCA sell during the weekday
+- DCA buy at weekend nights and DCA sell during weekday days
+- Simple momentum buy and sell
 - Moving Avg as indicators for buy and sell
 - Log of Moving Avg as indicator for buy and sell						
 - Log fit (similar to DCA but only buy when price is below log fit) buy every 1, 7, 14, 30 days							
@@ -74,15 +79,11 @@ Strategies to test:
 - Log fit buy (when below) and sell (when above) every 1, 7, 14, 30 days
 - Log fit buy and sell every 1 hour
 - Buy and sell based on fear and greed index
-- Combo of fear/greed and log fit
-- DCA buy over night and DCA sell during the day
-- DCA buy over weekends, DCA sell during the weekday
-- DCA buy at weekend nights and DCA sell during weekday days 
-- Simple momentum buy and sell							
+- Combo of fear/greed and log fit 						
 - Neural Network									
 - Other ML?
 
-Results captured per Strategy per time period:
+### Results captured per Strategy per time period:
 - Time period price delta (start to end)
 - Time period % price delta
 - Starting USD
@@ -103,12 +104,12 @@ Results captured per Strategy per time period:
 - Negative volatility of price (Sortino Ratio)
 - Standard deviation of price (Measures volatility of price)
 
-How do I save the results?
+### How do I save the results?
 - Similar price_period and strategy results are saved together to allow for easy comparison between:
     - different strategies in the same price period
     - different price periods for the same strategy
 
-Overall logic Summary:
+### Overall logic Summary:
 - Break price/time data into time periods
 - Make each strategy a class and give them a "run_logic" function
     - run_logic has the code that makes a strategy work
