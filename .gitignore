@@ -5,6 +5,7 @@ price_period_csv*
 TODO.txt
 testing.ipynb
 api_data.py
+.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
