@@ -2,6 +2,8 @@
 Testing for the base dca strategy class
 """
 import pytest as pt
+import pandas as pd
+from test_all_tests import get_test_data_path
 import base_strategy as bs
 from specific_strategies import dca
 
@@ -17,10 +19,12 @@ def test_1_day():
     days = 1
     # Turns days into seconds
     days = days*seconds_in_a_day
+    price_df = pd.read_csv(get_test_data_path('test'))
     dca_strategy = dca.base_dca(
         starting_usd=starting_usd,
         time_between_action=days,
         price_period_name='test',
+        price_df=price_df,
         save_results=False
     )
     dca_strategy.run_logic()
@@ -46,11 +50,13 @@ def test_longer_than_price_period():
     days = 28
     # Turns days into seconds
     days = days*seconds_in_a_day
+    price_df = pd.read_csv(get_test_data_path('test'))
     dca_strategy = dca.base_dca(
         starting_usd=starting_usd,
         time_between_action=days,
         price_period_name='test',
-        save_results=True
+        price_df=price_df,
+        save_results=False
     )
     try:
         dca_strategy.run_logic()
@@ -71,10 +77,12 @@ def test_28_days():
     days = 28
     # Turns days into seconds
     days = days*seconds_in_a_day
+    price_df = pd.read_csv(get_test_data_path('test_month'))
     dca_strategy = dca.base_dca(
         starting_usd=starting_usd,
         time_between_action=days,
         price_period_name='test_month',
+        price_df=price_df,
         save_results=False
     )
     dca_strategy.run_logic()

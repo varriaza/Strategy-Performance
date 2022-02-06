@@ -48,6 +48,13 @@ def period_path(csv):
         csv = csv + '.csv'
     return f'price_period_csv\\{csv}'
 
+def full_path(csv):
+    """Path to the csv_files. Used mainly for raw data."""
+    # Make sure we have the file ending
+    if csv[-4:] != '.csv':
+        csv = csv + '.csv'
+    return f'csv_files\\{csv}'
+
 class Strategy:
     """Base strategy class, specific strategies should inherent this."""
     def __init__(

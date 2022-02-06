@@ -2,8 +2,10 @@
 Testing for the base all_in strategy class
 """
 import pytest as pt
+import pandas as pd
 import base_strategy as bs
 from specific_strategies import all_in
+from test_all_tests import get_test_data_path
 
 def test_all_in():
     """
@@ -17,10 +19,12 @@ def test_all_in():
     days = 2
     # Turns days into seconds
     days = days*seconds_in_a_day
+    price_df = pd.read_csv(get_test_data_path('test'))
     all_in_strategy = all_in.base_all_in(
         starting_usd=starting_usd,
         time_between_action=days,
         price_period_name='test',
+        price_df=price_df,
         save_results=False
     )
     all_in_strategy.run_logic()

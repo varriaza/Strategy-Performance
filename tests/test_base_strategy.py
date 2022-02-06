@@ -5,6 +5,7 @@ import os
 from fractions import Fraction as frac
 import pytest as pt
 import pandas as pd
+from test_all_tests import get_test_data_path
 import base_strategy as bs
 
 def compare(value1, value2):
@@ -205,7 +206,7 @@ def test_go_to_next_action():
     time_between_action = 1
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -273,7 +274,7 @@ def test_go_to_end():
     time_between_action = 60*999999999
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -304,7 +305,7 @@ def test_go_to_next_action_big_skip():
     time_between_action = 60*9
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -671,7 +672,7 @@ def test_add_data_to_results():
     time_between_action = 60*9
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -755,7 +756,7 @@ def test_add_data_new_row():
     time_between_action = 60*19
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -860,7 +861,7 @@ def test_add_data_update_row():
     time_between_action = 60*19
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(
@@ -963,7 +964,7 @@ def test_returns_history():
     time_between_action = 60*19
     price_file_name = 'test.csv'
     price_period_name = price_file_name[:-4]
-    price_df = pd.read_csv(bs.period_path(price_file_name), index_col='index')
+    price_df = pd.read_csv(get_test_data_path(price_file_name), index_col='index')
 
     # Call the class init
     testing_strat = bs.Strategy(

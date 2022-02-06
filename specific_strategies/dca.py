@@ -6,6 +6,7 @@ Takes in how often you want to DCA in days as an input.
 from fractions import Fraction as frac
 import time
 import base_strategy as bs
+import pandas as pd
 
 def display_time(seconds, granularity=1):
     """ Turns seconds into weeks, days, hours, minutes and seconds.
@@ -36,13 +37,14 @@ class base_dca(bs.Strategy):
     """
     Base dca strategy class. Specific strategies should just change the time_between_action variable.
     """
-    def __init__(self, starting_usd, time_between_action, price_period_name, starting_eth = 0, save_results = True):
+    def __init__(self, starting_usd, time_between_action, price_period_name, price_df=pd.DataFrame(), starting_eth = 0, save_results = True):
         self.dca_period = display_time(time_between_action)
         super().__init__(
             name=f'DCA every {self.dca_period}',
             starting_usd=starting_usd,
             time_between_action=time_between_action,
             price_period_name=price_period_name,
+            price_df=price_df,
             starting_eth=starting_eth,
             save_results=save_results
         )
