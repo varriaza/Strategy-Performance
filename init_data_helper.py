@@ -1,6 +1,9 @@
 """Helper functions for initializing data"""
 from fractions import Fraction as frac
+import time
+import datetime
 import pandas as pd
+import base_strategy as bs
 import numpy as np
 
 # Write function to merge binance and kaggle data
@@ -81,11 +84,40 @@ def combine_datasets(df1, df2):
     # drop all columns we don't want
     combined_dataframes = combined_dataframes.filter(['index', 'timestamp', 'fraction_price', 'decimal_price'])
     # Drop duplicates and sort
-    combined_dataframes = combined_dataframes.drop_duplicates(subset=['timestamp']).sort_values(by=['timestamp'], ignore_index=True)
+    combined_dataframes = combined_dataframes.drop_duplicates(
+        subset=['timestamp']).sort_values(by=['timestamp'], ignore_index=True
+    )
     return combined_dataframes
 
-# df1 = pd.read_csv('csv_files/test_c_df.csv')
-# df2 = pd.read_csv('csv_files/test_c_df2.csv')
-# print(df1)
-# print(df2)
-# print(combine_datasets(df1, df2))
+def create_price_period(start, end, name, csv='Combined_ETH_all_price_data.csv'):
+    """
+    Loops through csv until time > start and continue until end < time.
+    If the end of a file is reached, open the next one.
+    Save the resulting data as a new csv called 'name.csv'
+    """
+    # If we get a date, turn it to a timestamp, otherwise just continue
+    if not isinstance(start, int):
+        start = int(time.mktime(datetime.datetime.strptime(start, "%m/%d/%Y").timetuple()))
+    if not isinstance(end, int):
+        end = int(time.mktime(datetime.datetime.strptime(end, "%m/%d/%Y").timetuple()))
+    print(f'Start timestamp: {start}')
+    print(f'End timestamp: {end}')
+    new_df = pd.DataFrame(columns=['timestamp'])
+
+    # read data in
+    data = pd.read_csv(bs.full_path(csv))
+    data = data.drop(['index'], axis=1)
+    # Add all rows that are between start and end to new_df
+    new_df = new_df.append(
+        data.loc[
+            (data['timestamp'] > start) &
+            (data['timestamp'] < end)
+        ], ignore_index=True
+    )
+
+    # Rename the actual index to 'index'
+    new_df.index.names = ['index']
+
+    # Save df as csv
+    if not new_df.empty:
+        new_df.to_csv(bs.period_path(name+'.csv'))
