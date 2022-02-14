@@ -28,10 +28,10 @@ def test_data():
     cb_data = get_coinbase_data(start_date='2018-01-01-00-00', end_date='2018-01-1-05-00')
     # assert columns are expected
     # index,timestamp,fraction_price,decimal_price
-    # 0,1514764800,30539155363803955/70368744177664,433.9875
+    # 0,1514764800,1479/2,739.5
     expected_timestamp = 1514764860
-    expected_fraction_price = frac('30539155363803955/70368744177664')
-    expected_decimal_price = 433.9875
+    expected_fraction_price = frac('1479/2')
+    expected_decimal_price = 739.5
     assert cb_data['timestamp'].values[0] == expected_timestamp
     assert cb_data['fraction_price'].values[0] == expected_fraction_price
     assert cb_data['decimal_price'].values[0] == expected_decimal_price
