@@ -1,4 +1,4 @@
-"""Contains function that gets data from CoinBase Pro API"""
+"""Contains the function that gets data from the CoinBase Pro API"""
 # imports
 from fractions import Fraction as frac
 from lib.HistoricalData import HistoricalData # for CoinBase Pro

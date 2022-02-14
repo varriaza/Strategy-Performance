@@ -17,7 +17,7 @@ def test_results():
     Test that the results are in the expected output format
     """
     cb_data = get_coinbase_data(start_date='2018-01-01-00-00', end_date='2018-01-1-01-00')
-    # assert columns are expected 
+    # assert columns are expected
     assert list(cb_data.columns) == ['index', 'timestamp', 'fraction_price', 'decimal_price']
 
 
