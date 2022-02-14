@@ -3,7 +3,7 @@ Testing for the base all_in strategy class
 """
 import pytest as pt
 import pandas as pd
-import base_strategy as bs
+import lib.base_strategy as bs
 from specific_strategies import all_in
 from test_all_tests import get_test_data_path
 

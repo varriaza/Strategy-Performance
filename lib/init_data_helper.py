@@ -2,9 +2,9 @@
 from fractions import Fraction as frac
 import time
 import datetime
-import pandas as pd
-import base_strategy as bs
 import numpy as np
+import pandas as pd
+import lib.base_strategy as bs
 
 # Write function to merge binance and kaggle data
 # (don't take duplicate, drop unneeded kaggle columns, save result as one file.)
@@ -68,6 +68,8 @@ def combine_datasets(df1, df2):
     """
     # Combine the dataframes
     combined_dataframes = df1.set_index('index').join(df2.set_index('index'), how='outer', lsuffix='_1', rsuffix='_2')
+    # Make 'index' a regular column after we got rid of it above
+    combined_dataframes['index'] = combined_dataframes.index
 
     # Set average fraction_price
     combined_dataframes['fraction_price'] = np.nan

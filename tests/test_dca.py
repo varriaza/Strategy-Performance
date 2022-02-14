@@ -4,7 +4,7 @@ Testing for the base dca strategy class
 import pytest as pt
 import pandas as pd
 from test_all_tests import get_test_data_path
-import base_strategy as bs
+import lib.base_strategy as bs
 from specific_strategies import dca
 
 def test_1_day():

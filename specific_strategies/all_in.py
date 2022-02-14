@@ -4,7 +4,7 @@ Inherits base_strategy.
 Goes all in right away.
 """
 import time
-import base_strategy as bs
+import lib.base_strategy as bs
 import pandas as pd
 
 class base_all_in(bs.Strategy):

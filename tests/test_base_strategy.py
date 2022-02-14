@@ -6,7 +6,7 @@ from fractions import Fraction as frac
 import pytest as pt
 import pandas as pd
 from test_all_tests import get_test_data_path
-import base_strategy as bs
+import lib.base_strategy as bs
 
 def compare(value1, value2):
     """
@@ -112,7 +112,7 @@ def test_init_blank():
     Test that calling strategy() without arguments will fail.
     """
     try:
-        bs.Strategy()
+        bs.Strategy() # pylint: disable=no-value-for-parameter
         failed = False
     except TypeError:
         # Strategy correctly failed with no arguments

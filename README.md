@@ -124,3 +124,10 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
         - Perform logic, loop more 
 - Save results to a time period results table inside a csv file   
     - If time period file exists, check if the strategy already has a row. If it does, replace it, if not append new data.
+
+## References and Acknowledgments
+- HistoricalData.py is taken from: https://github.com/David-Woroniuk/Historic_Crypto/blob/main/HistoricalData.py
+    - I did very minor edits, mostly to remove print statements
+    - All credit goes to David-Woroniuk
+- A big thanks to this kaggle dataset, CoinBase and Binance for the price data
+    - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum

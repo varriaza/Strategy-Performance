@@ -4,9 +4,9 @@ Testing for the init_data_helper.py script
 from fractions import Fraction as frac
 import pandas as pd
 import numpy as np
-import init_data_helper as idh
 import pytest as pt
 from test_all_tests import get_test_data_path
+import lib.init_data_helper as idh
 
 def test_compare_dataset_timestamps():
     """
@@ -77,7 +77,7 @@ def test_combine_datasets():
     df2 = pd.read_csv(get_test_data_path('test_final_csv_df2.csv'))
     results = idh.combine_datasets(df1, df2)
     # Make sure we only get the columns that we expect back, index is not returned by columns
-    assert list(results.columns) == ['timestamp', 'fraction_price', 'decimal_price']
+    assert list(results.columns) == ['index', 'timestamp', 'fraction_price', 'decimal_price']
     # Assert timestamps values are what we expect
     assert list(results['timestamp'].values) == [
         1514764860, 1514764920, 1514764980, 1514765040, 1514765100, 1514765160, 1514765220
@@ -88,6 +88,6 @@ def test_combine_datasets():
     ]
     # Assert decimal_price values are what we expect
     assert list(results['decimal_price'].values) == [30.1, 31.1, round((20.5+32.1)/2, 4), 33.1, 34.1, 35.1, 36.1]
-    
+
 if __name__ == "__main__":
     pt.main(['tests/test_init_data_helper.py'])

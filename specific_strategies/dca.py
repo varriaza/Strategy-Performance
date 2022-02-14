@@ -5,8 +5,8 @@ Takes in how often you want to DCA in days as an input.
 """
 from fractions import Fraction as frac
 import time
-import base_strategy as bs
 import pandas as pd
+import lib.base_strategy as bs
 
 def display_time(seconds, granularity=1):
     """ Turns seconds into weeks, days, hours, minutes and seconds.
