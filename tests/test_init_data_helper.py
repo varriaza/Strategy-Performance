@@ -15,8 +15,8 @@ def test_compare_dataset_timestamps():
     df1 = pd.read_csv(get_test_data_path('test_final_csv_df1.csv'))
     df2 = pd.read_csv(get_test_data_path('test_final_csv_df2.csv'))
     df1_unique, df2_unique = idh.compare_dataset_timestamps(df1, df2, debug=True)
-    assert list(df1_unique.values) == [1514765160, 1514765220]
-    assert list(df2_unique.values) == [1514765040, 1514765100]
+    assert list(df1_unique.values) == [1514765160, 1514765220, 1514765340]
+    assert list(df2_unique.values) == [1514765040, 1514765100, 1514765400]
 
 def test_check_missing_timestamp():
     """
@@ -76,18 +76,23 @@ def test_combine_datasets():
     df1 = pd.read_csv(get_test_data_path('test_final_csv_df1.csv'))
     df2 = pd.read_csv(get_test_data_path('test_final_csv_df2.csv'))
     results = idh.combine_datasets(df1, df2)
+    print(f'Results:\n{results}\n')
     # Make sure we only get the columns that we expect back, index is not returned by columns
     assert list(results.columns) == ['index', 'timestamp', 'fraction_price', 'decimal_price']
     # Assert timestamps values are what we expect
     assert list(results['timestamp'].values) == [
-        1514764860, 1514764920, 1514764980, 1514765040, 1514765100, 1514765160, 1514765220
+        1514764860, 1514764920, 1514764980, 1514765040, 1514765100,
+        1514765160, 1514765220, 1514765280, 1514765340, 1514765400
     ]
     # Assert fraction_price values are what we expect
     assert list(results['fraction_price'].values) == [
-        frac('25/10'), frac('26/10'), frac('25/10'), frac('31/10'), frac('27/10'), frac('27/10'), frac('28/10')
+        frac('25/10'), frac('26/10'), frac('25/10'), frac('31/10'), frac('27/10'),
+        frac('27/10'), frac('28/10'), frac('5/2'), frac('30/10'), frac('20/10')
     ]
     # Assert decimal_price values are what we expect
-    assert list(results['decimal_price'].values) == [30.1, 31.1, round((20.5+32.1)/2, 4), 33.1, 34.1, 35.1, 36.1]
+    assert list(results['decimal_price'].values) == [
+        30.1, 31.1, round((20.5+32.1)/2, 4), 33.1, 34.1, 35.1, 36.1, 25.0, 30.4, 20.2
+    ]
 
 if __name__ == "__main__":
     pt.main(['tests/test_init_data_helper.py'])

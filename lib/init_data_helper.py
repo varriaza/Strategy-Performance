@@ -43,19 +43,24 @@ def check_missing_timestamp(df, debug=False):
 def make_average(df_row, new_row_name):
     # if the first column is null, use the second
     if pd.isnull(df_row[new_row_name+'_1']):
-        df_row[new_row_name] = frac(df_row[new_row_name+'_2'])
+        # Don't use frac if we want a decimal
+        if new_row_name == 'decimal_price':
+            df_row[new_row_name] = df_row[new_row_name+'_2']
+        else:
+            df_row[new_row_name] = frac(df_row[new_row_name+'_2'])
     # if the second column is null, use the first
     elif pd.isnull(df_row[new_row_name+'_2']):
-        df_row[new_row_name] = frac(df_row[new_row_name+'_1'])
+        # Don't use frac if we want a decimal
+        if new_row_name == 'decimal_price':
+            df_row[new_row_name] = df_row[new_row_name+'_1']
+        else:
+            df_row[new_row_name] = frac(df_row[new_row_name+'_1'])
     # If we need fraction_price, make the values fractions type
     elif new_row_name == 'fraction_price':
         df_row[new_row_name] = (frac(df_row[new_row_name+'_1']) + frac(df_row[new_row_name+'_2']))/2
     # If we need decimals, round to the fourth digit
     elif new_row_name == 'decimal_price':
         df_row[new_row_name] = round((df_row[new_row_name+'_1'] + df_row[new_row_name+'_2'])/2, 4)
-    # Just default to column_1 for timestamps
-    elif new_row_name == 'timestamp':
-        df_row[new_row_name] = df_row[new_row_name+'_1']
     else:
         raise ValueError('new_row_name misspelt!')
     return df_row
@@ -67,10 +72,9 @@ def combine_datasets(df1, df2):
     Keep average price, drop the rest of the duplicates
     """
     # Combine the dataframes
-    combined_dataframes = df1.set_index('index').join(df2.set_index('index'), how='outer', lsuffix='_1', rsuffix='_2')
-    # Make 'index' a regular column after we got rid of it above
-    combined_dataframes['index'] = combined_dataframes.index
-
+    combined_dataframes = df1.set_index('timestamp').join(
+        df2.set_index('timestamp'), how='outer', lsuffix='_1', rsuffix='_2'
+    )
     # Set average fraction_price
     combined_dataframes['fraction_price'] = np.nan
     combined_dataframes = combined_dataframes.apply(lambda x: make_average(x, 'fraction_price'), axis=1)
@@ -79,16 +83,13 @@ def combine_datasets(df1, df2):
     combined_dataframes['decimal_price'] = np.nan
     combined_dataframes = combined_dataframes.apply(lambda x: make_average(x, 'decimal_price'), axis=1)
 
-    # Reset timestamp due to merge
-    combined_dataframes['timestamp'] = np.nan
-    combined_dataframes = combined_dataframes.apply(lambda x: make_average(x, 'timestamp'), axis=1)
-
-    # drop all columns we don't want
+    # Reset the index so we can get regular numbers instead of timestamps
+    # and make timestamp a column instead of the index
+    combined_dataframes = combined_dataframes.reset_index(level='timestamp')
+    # Make index a column using the dataframe's new index
+    combined_dataframes['index'] = combined_dataframes.index
+    # Drop all columns we don't want
     combined_dataframes = combined_dataframes.filter(['index', 'timestamp', 'fraction_price', 'decimal_price'])
-    # Drop duplicates and sort
-    combined_dataframes = combined_dataframes.drop_duplicates(
-        subset=['timestamp']).sort_values(by=['timestamp'], ignore_index=True
-    )
     return combined_dataframes
 
 def create_price_period(start, end, name, csv='Combined_ETH_all_price_data.csv'):
