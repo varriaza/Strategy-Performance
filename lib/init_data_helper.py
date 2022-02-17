@@ -6,8 +6,6 @@ import numpy as np
 import pandas as pd
 import lib.base_strategy as bs
 
-# Write function to merge binance and kaggle data
-# (don't take duplicate, drop unneeded kaggle columns, save result as one file.)
 def compare_dataset_timestamps(df1, df2, debug=False):
     """
     Take in two dataframes, and find the values where timestamps are unique.
@@ -20,25 +18,20 @@ def compare_dataset_timestamps(df1, df2, debug=False):
     if debug:
         return df1_unique, df2_unique
 
-# df1 = pd.read_csv('csv_files/test_c_df.csv')
-# df2 = pd.read_csv('csv_files/test_c_df2.csv')
-# compare_dataset_timestamps(df1, df2)
-
-# validate that we are not missing any timestamps by checking that the next timestamp is sixty seconds in the future
 def check_missing_timestamp(df, debug=False):
     """
     Validate that we are not missing any timestamps by checking that the next timestamp is sixty seconds in the future
     The last timestamp will always fail so print that out for human visual removal
     """
-    df_missing = df['timestamp'].loc[~(df['timestamp'].astype(int)+60).isin(df['timestamp'])].astype(int)
-    print(f'Missing timestamps (add 60 sec): \n{df_missing.to_string()}')
+    # Find values where there is no timestamp equal to itself+60 seconds
+    # Then add 60 to see which timestamp is missing
+    df_missing = df['timestamp'].loc[~(df['timestamp'].astype(int)+60).isin(df['timestamp'])].astype(int)+60
+    # Drop the last value as that will always not have a timestamp 60 seconds after it
+    df_missing = df_missing.drop(index=df_missing.index.values[-1])
+    print(f'Missing timestamps: \n{df_missing.to_string()}')
     print(f'Number of missing timestamps: {len(df_missing.index)}')
-    print(f'Ignore last timestamp of: {df["timestamp"].values[-1]}\n')
     if debug:
         return df_missing
-
-# df3 = pd.read_csv('csv_files/test_c_df3.csv')
-# check_missing_timestamp(df3)
 
 def make_average(df_row, new_row_name):
     # if the first column is null, use the second

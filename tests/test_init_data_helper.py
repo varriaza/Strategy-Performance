@@ -18,13 +18,24 @@ def test_compare_dataset_timestamps():
     assert list(df1_unique.values) == [1514765160, 1514765220, 1514765340]
     assert list(df2_unique.values) == [1514765040, 1514765100, 1514765400]
 
-def test_check_missing_timestamp():
+def test_check_missing_timestamp_1():
     """
     See if each timestamp has another one sixty seconds after it except for the last one.
+    Looks at file: test_timestamp_gaps_1.csv
     """
-    df3 = pd.read_csv(get_test_data_path('test_initial_price_df.csv'))
+    # df3 = pd.read_csv(get_test_data_path('test_initial_price_df.csv'))
+    df3 = pd.read_csv(get_test_data_path('test_timestamp_gaps_1.csv'))
     results = idh.check_missing_timestamp(df3, debug=True)
-    assert list(results.values) == [120, 240, 360]
+    assert list(results.values) == [180, 300]
+
+def test_check_missing_timestamp_2():
+    """
+    See if each timestamp has another one sixty seconds after it except for the last one.
+    Looks at file: test_timestamp_gaps_2.csv
+    """
+    df4 = pd.read_csv(get_test_data_path('test_timestamp_gaps_2.csv'))
+    results = idh.check_missing_timestamp(df4, debug=True)
+    assert list(results.values) == [360, 536]
 
 def test_fraction_make_average():
     """fraction_price scenarios"""
