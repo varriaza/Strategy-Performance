@@ -23,9 +23,8 @@ def test_check_missing_timestamp_1():
     See if each timestamp has another one sixty seconds after it except for the last one.
     Looks at file: test_timestamp_gaps_1.csv
     """
-    # df3 = pd.read_csv(get_test_data_path('test_initial_price_df.csv'))
-    df3 = pd.read_csv(get_test_data_path('test_timestamp_gaps_1.csv'))
-    results = idh.check_missing_timestamp(df3, debug=True)
+    df = pd.read_csv(get_test_data_path('test_timestamp_gaps_1.csv'))
+    results = idh.check_missing_timestamp(df, debug=True)
     assert list(results.values) == [180, 300]
 
 def test_check_missing_timestamp_2():
@@ -33,9 +32,18 @@ def test_check_missing_timestamp_2():
     See if each timestamp has another one sixty seconds after it except for the last one.
     Looks at file: test_timestamp_gaps_2.csv
     """
-    df4 = pd.read_csv(get_test_data_path('test_timestamp_gaps_2.csv'))
-    results = idh.check_missing_timestamp(df4, debug=True)
+    df = pd.read_csv(get_test_data_path('test_timestamp_gaps_2.csv'))
+    results = idh.check_missing_timestamp(df, debug=True)
     assert list(results.values) == [360, 536]
+
+def test_big_jumps():
+    """
+    Validate if we can find values where the price after the current is + or - 10%
+    Looks at file: test_big_jumps.csv
+    """
+    df = pd.read_csv(get_test_data_path('test_big_jumps.csv'))
+    results = idh.check_price_jump(df, debug=True)
+    assert list(results['multiplier'].values) == [2.0, .5, .9]
 
 def test_fraction_make_average():
     """fraction_price scenarios"""

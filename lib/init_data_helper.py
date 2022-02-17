@@ -21,7 +21,6 @@ def compare_dataset_timestamps(df1, df2, debug=False):
 def check_missing_timestamp(df, debug=False):
     """
     Validate that we are not missing any timestamps by checking that the next timestamp is sixty seconds in the future
-    The last timestamp will always fail so print that out for human visual removal
     """
     # Find values where there is no timestamp equal to the current one +60 seconds
     # Then add 60 to the current timestamp so we can see which timestamp is missing
@@ -32,6 +31,31 @@ def check_missing_timestamp(df, debug=False):
     print(f'Number of missing timestamps: {len(df_missing.index)}')
     if debug:
         return df_missing
+
+def check_price_jump(df, debug=False):
+    """
+    See if we have any instances where price fluctuates rapidly.
+    This could be a sign of bad data, or a really hot market.
+    """
+    # Find values where the price after the current is + or - 10%
+    # A 10% move over a minute is pretty big so false positives from hot/bad markets shouldn't be caught too often
+    difference = .1
+    # Make a shifted decimal_price column to compare against
+    df['next_decimal_price'] = df['decimal_price'].shift(-1)
+    # Drop the first and last rows since we won't have prices to compare against
+    df = df.dropna()
+    # Find values
+    df = df.loc[
+        (df['next_decimal_price'] >= df['decimal_price']*(1+difference)) |
+        (df['next_decimal_price'] <= df['decimal_price']*(1-difference))
+    ]
+    # Show how big the jump is (aka decimal_price*multiplier=next_decimal_price)
+    df['multiplier'] = round(df['next_decimal_price']/df['decimal_price'], 2)
+
+    print(f'Big Jumps: \n{df.to_string()}')
+    print(f'Number of jumps: {len(df.index)}')
+    if debug:
+        return df
 
 def make_average(df_row, new_row_name):
     # if the first column is null, use the second
