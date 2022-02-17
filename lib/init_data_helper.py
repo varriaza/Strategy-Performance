@@ -23,7 +23,7 @@ def check_missing_timestamp(df, debug=False):
     Validate that we are not missing any timestamps by checking that the next timestamp is sixty seconds in the future
     The last timestamp will always fail so print that out for human visual removal
     """
-    # Find values where there is no timestamp equal to itself+60 seconds
+    # Find values where there is no timestamp equal to the current one +60 seconds
     # Then add 60 to see which timestamp is missing
     df_missing = df['timestamp'].loc[~(df['timestamp'].astype(int)+60).isin(df['timestamp'])].astype(int)+60
     # Drop the last value as that will always not have a timestamp 60 seconds after it
