@@ -7,12 +7,12 @@ Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regula
 It provides hedges against price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves.
 
 ## Why ETH?
-Ethereum is how I got into the wonderful world of cryptocurrency and DeFi so it only felt natural to use it. However, I have constructed the code to make it very easy to collect data on other pairs. Simply change the API calls to the desired pair then call the strategies with the pair data. In the future I plan to update the code to accept coin names so that the results will automatically update for your desired pair.
+Ethereum is how I got into the wonderful world of cryptocurrency and DeFi so it only felt natural to use it. However, I have constructed the code to make it very easy to collect data on other pairs. Simply change the API calls to the desired pair then call the strategies with the new data. In the future I plan to update the data collection code to accept coin names so that the results will automatically update for your desired pair.
 
 ## What will happen when data collection is finished?
 I will be writing up two summary posts. Both will be uploaded freely to the internet via Reddit, medium or other methods.
-    1) Why we need DCA DeFi apps, aka how much benefit does DCA bring to cryptocurrency investing? Are certain kinds of DCA strategies better than others?
-    2) How do a bunch of strategies compare during different price periods? This is more for the advanced trader rather than investors.
+    1) Are DCA DeFi apps needed? How much benefit does DCA bring to cryptocurrency investing? Are certain kinds of DCA strategies better than others?
+    2) How do a bunch of strategies compare during different price periods? This is more focused on algorithmic trading strategies for the advanced trader or the data curious.
 
 ## Code details
 ### How do I run this?
@@ -129,5 +129,5 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
 - HistoricalData.py is taken from: https://github.com/David-Woroniuk/Historic_Crypto/blob/main/HistoricalData.py
     - I did very minor edits, mostly to remove print statements
     - All credit goes to David-Woroniuk
-- A big thanks to this kaggle dataset, CoinBase and Binance for the price data
+- A big thanks to the following kaggle dataset, CoinBase and Binance for the price data
     - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
