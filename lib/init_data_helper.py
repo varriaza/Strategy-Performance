@@ -27,8 +27,8 @@ def check_missing_timestamp(df, debug=False):
     df_missing = df['timestamp'].loc[~(df['timestamp'].astype(int)+60).isin(df['timestamp'])].astype(int)+60
     # Drop the last value as that will always not have a timestamp 60 seconds after it
     df_missing = df_missing.drop(index=df_missing.index.values[-1])
-    print(f'Missing timestamps: \n{df_missing.to_string()}')
     print(f'Number of missing timestamps: {len(df_missing.index)}')
+    print(f'Missing timestamps: \n{df_missing.values}')
     if debug:
         return df_missing
 
@@ -44,16 +44,17 @@ def check_price_jump(df, debug=False):
     df['next_decimal_price'] = df['decimal_price'].shift(-1)
     # Drop the first and last rows since we won't have prices to compare against
     df = df.dropna()
-    # Find values
+    # Find values and reset index to be accurate for the new dataframe
     df = df.loc[
         (df['next_decimal_price'] >= df['decimal_price']*(1+difference)) |
         (df['next_decimal_price'] <= df['decimal_price']*(1-difference))
-    ]
+    ].reset_index(drop=True)
     # Show how big the jump is (aka decimal_price*multiplier=next_decimal_price)
     df['multiplier'] = round(df['next_decimal_price']/df['decimal_price'], 2)
 
-    print(f'Big Jumps: \n{df.to_string()}')
+    print(f'Looking for a difference of {difference*100}% or more.')
     print(f'Number of jumps: {len(df.index)}')
+    print(f'Big Jumps: \n{df.to_string()}')
     if debug:
         return df
 
