@@ -2,7 +2,6 @@
 full_data*
 csv_files*
 price_period_csv*
-TODO.txt
 testing.ipynb
 api_data.py
 strategy_performance-workspace*

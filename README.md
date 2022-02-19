@@ -17,24 +17,23 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
 ## Code details
 ### How do I run this?
 - Collect data from kaggle, CoinBase and/or Binance
-    - Created in ini_data.ipynb
+    - Created in init_data.ipynb
 - Create price period data
     - Make sure your data has prices for all of the price periods you will be creating
     - Created in ini_data.ipynb
 - Run strategies for price periods you want
     - Run create_tables.ipynb with your data
 
+###
+- See TODO.txt for a peak at what I am currently working on and have planned for the future.
+
 ### ETH Price Data is taken as the average of price from:
 - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
-- Binance API (WIP)
-- CoinBase Pro API (WIP)
+- Binance API
+- CoinBase Pro API
 
 ### Data Notes:
-- I did not include the source price data in this repo as it would take a decent amount of space and is very much WIP.
-    - I will provide a script that:
-        - can be run to re-create the Binance and CoinBase data.
-        - will format the kaggle data into the format I used.
-    - Anyone will be able to recreate the results I found, add new strategies or look at new crypto pairs.
+- Source data is NOT included, see init_data.ipynb
 - Price is currently calculated as: (Open+Close+High+Low)/4. I then take the average from the three sources I have.
     - This will minimize price anomalies or large orders throwing my sources off from the rest of the market.
 - Price data is taken every minute, which should be a good enough approximation for my purposes.
@@ -63,14 +62,16 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
     - 1620125000 (before 2021 crash) to end of 2021
 
 ### Strategies to test:
-- 100% all in right away
-- FOMO in only (buy if asset has gone up more than double digit % in past y days), don't sell
-- FOMO in and out, FOMO buy and then sell after x% drop in past y days
+- 100% all in, right away
+- All in buy the top (worst case)
+- All in buy the bottom (best case)
 - DCA every 1, 7, 14, 30 days									
 - DCA every 1 hour
 - DCA buy over nights and DCA sell during the day
 - DCA buy over weekends, DCA sell during the weekday
 - DCA buy at weekend nights and DCA sell during weekday days
+- FOMO in only (buy if asset has gone up more than double digit % in past y days), don't sell
+- FOMO in and out, FOMO buy and then sell after x% drop in past y days
 - Simple momentum buy and sell
 - Moving Avg as indicators for buy and sell
 - Log of Moving Avg as indicator for buy and sell						

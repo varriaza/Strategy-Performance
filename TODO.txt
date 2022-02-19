@@ -1,0 +1,30 @@
+TODO:
+[ ] - WIP
+[x] - Complete
+
+Short Term:
+[ ] Add price jump check to overall, Binance and CoinBase datasets
+[ ] Add the 'strategies' from this really good DCA reddit post
+- https://www.reddit.com/r/financialindependence/comments/iq30q8/timing_the_market_absolute_worst_vs_absolute_best/
+    - It is the worst/best case scenario for each time period.
+    [ ] Create "Tiffany Top" - All in buys the top
+    [ ] Create "Brittany Bottom" - All in buys the bottom
+[ ] Collect DCA data on all time periods
+[ ] Collect All in data on all time periods
+[ ] Collect TT and BB data on all time periods
+[ ] Create ipynb file that analyses data with a write up in it comparing DCA vs All_in
+
+Medium Term:
+[ ] Create Log fit buy
+[ ] Create Log fit buy and sell 
+[ ] Create FOMO
+[ ] Create Buy and sell based on fear and greed index
+[ ] Create Combo of fear/greed and log fit
+[ ] Create Simple momentum buy and sell
+[ ] Create other strategies
+[ ] Crete data analysis of these new strategies
+
+Long Term:
+[ ] Add more exchange data sources
+[ ] Update the code to accept coin names so that the results will automatically update for your desired pair
+[ ] Create Neural Network/ML strategies
