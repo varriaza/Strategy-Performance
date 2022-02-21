@@ -38,19 +38,22 @@ class base_all_in_top(bs.Strategy):
         # Find the index with the max price for this price_period
         index_at_max = self.price_df['decimal_price'].idxmax()
         # Find the max price for this price_period
-        max_price = self.price_df['decimal_price'].max()
+        max_fraction_price = bs.frac(self.price_df['fraction_price'].iloc[index_at_max])
 
         # loop until we hit the LoopComplete exception
         while not self.done_looping:
-            # Using this implementation we aren't guaranteed to get the exact maximum price.
-            # However, we can skip large amounts of time without having to worry about
-            # accidentally missing the maximum price. We should still get a price very close to where we want it.
+            # Using this implementation, we aren't guaranteed to get a 100% accurate returns_df.
+            # The time we buy is going to be some time AFTER the max price was achieved.
+            # However, over long periods of time, this impact should be minimal.
+            # Reduce the time_between_actions to increase the accuracy of returns_df.
+            # We have to balance looking at every value to see if we are at the max vs making the code not
+            # take 12 hours to run for one time period.
             if not self.done_buying and self.current_index >= index_at_max:
+                # Set the current_price before we buy to artificially get the max price
+                self.current_price = max_fraction_price
                 # Do a 100% buy
                 self.buy_eth(usd_eth_to_buy=self.starting_usd)
                 self.done_buying = True
-                # Show how far off our buy price is from the max price
-                print(f'Max price for this price_period: {max_price}')
                 print(f'Price bought at: {bs.unfrac(self.current_price)}')
             try:
                 self.go_to_next_action()
@@ -59,10 +62,10 @@ class base_all_in_top(bs.Strategy):
 
         # In case the index_at_max is in the final time loop, check if we still need to buy
         if not self.done_buying:
+            # Set the current_price before we buy to artificially get the max price
+            self.current_price = max_fraction_price
             # Do a 100% buy
             self.buy_eth(usd_eth_to_buy=self.starting_usd)
-            # Show how far off our buy price is from the max price
-            print(f'Max price for this price_period: {max_price}')
             print(f'Price bought at: {bs.unfrac(self.current_price)}')
 
         # Now add data to the results csv files

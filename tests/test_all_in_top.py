@@ -81,7 +81,7 @@ def test_all_in_top_middle_max():
     # Seconds in a day
     seconds_in_a_day = 60*60*24
     # Number of days
-    days = .05
+    days = .5
     # Turns days into seconds
     days = days*seconds_in_a_day
     price_df = pd.read_csv(get_test_data_path('test_month'))
@@ -100,7 +100,7 @@ def test_all_in_top_middle_max():
     # we should always end up with no USD left
     assert all_in_top_strategy.current_usd == 0
     # make sure we end up with the expected amount of ETH
-    expected_eth = 7.1843
+    expected_eth = 6.9993
     assert bs.unfrac(all_in_top_strategy.current_eth) == expected_eth
 
 if __name__ == "__main__":
