@@ -3,7 +3,7 @@ TODO:
 [x] - Complete
 
 Short Term:
-[ ] Add price jump check to overall, Binance and CoinBase datasets
+[x] Add price jump check to overall, Binance and CoinBase datasets
 [ ] Add the 'strategies' from this really good DCA reddit post
 - https://www.reddit.com/r/financialindependence/comments/iq30q8/timing_the_market_absolute_worst_vs_absolute_best/
     - It is the worst/best case scenario for each time period.
