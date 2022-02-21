@@ -4,11 +4,11 @@ TODO:
 
 Short Term:
 [x] Add price jump check to overall, Binance and CoinBase datasets
-[ ] Add the 'strategies' from this really good DCA reddit post
+[x] Add the 'strategies' from this really good DCA reddit post
 - https://www.reddit.com/r/financialindependence/comments/iq30q8/timing_the_market_absolute_worst_vs_absolute_best/
     - It is the worst/best case scenario for each time period.
-    [ ] Create "Tiffany Top" - All in buys the top
-    [ ] Create "Brittany Bottom" - All in buys the bottom
+    [x] Create "Tiffany Top" - All in buys the top
+    [x] Create "Brittany Bottom" - All in buys the bottom
 [ ] Collect DCA data on all time periods
 [ ] Collect All in data on all time periods
 [ ] Collect TT and BB data on all time periods
