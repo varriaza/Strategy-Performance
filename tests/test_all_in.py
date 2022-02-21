@@ -9,7 +9,7 @@ from test_all_tests import get_test_data_path
 
 def test_all_in():
     """
-    Test that buying every day returns expected results
+    Test that buying right away returns expected results
     """
     # Set default buy size to be 10k
     starting_usd = 10000
