@@ -60,7 +60,6 @@ def get_binance_data(TRADING_PAIR='ETHUSDT', start_date='', end_date=''):
     df_klines['fraction_price'] = df_klines['fraction_price'].apply(frac)
     # Create index column
     df_klines.index.name = 'index'
-    # df_klines['index'] = df_klines.index
 
     # Rename the first column to timestamp
     column_names = df_klines.columns.tolist()
