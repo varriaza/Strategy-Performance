@@ -209,7 +209,7 @@ class Strategy:
         sigma = (self.returns_df['% Return']/100).std()
         # If we have all the same return, like 0, then the std is 0.
         # This makes the sharpe ratio undefined due to dividing by zero
-        if pd.isna(sigma):
+        if pd.isna(sigma) or sigma == 0:
             return 'undefined'
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
@@ -233,7 +233,7 @@ class Strategy:
         # Only use returns that are less than 0
         sigma = (self.returns_df['% Return'].loc[self.returns_df['% Return'] < 0]/100).std()
         # If we have no negative returns, the sortino ratio is undefined due to dividing by zero
-        if pd.isna(sigma):
+        if pd.isna(sigma) or sigma == 0:
             return 'undefined'
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
