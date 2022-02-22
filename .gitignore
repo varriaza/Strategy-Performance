@@ -5,6 +5,7 @@ price_period_csv*
 testing.ipynb
 api_data.py
 strategy_performance-workspace*
+returns_history*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
