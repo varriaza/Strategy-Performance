@@ -2,6 +2,7 @@
 Base strategy class.
 Gets inherited by specific strategies.
 """
+from ast import Raise
 from fractions import Fraction as frac
 import pandas as pd
 
@@ -351,7 +352,9 @@ class Strategy:
             # save df as csv
             price_period_df.to_csv(path_to_results, index=False)
             # END of function
-
+        # Raise an error if we didn't make any trades
+        if self.trades_made == 0:
+            raise ValueError('Error: No trades were made! Double check your strategy.')
         # Now, at the end in vector calculate Total Value and yearly_%_return
         # Use lambda function to make sure we have a fraction and not a string
         self.returns_df['Total Value'] = self.returns_df['# of USD']+(
