@@ -4,7 +4,7 @@ I am looking to compare how different trading strategies for ETH-USD have behave
 
 ## Why make this?
 Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regular people looking to start investing in the stock market.
-It provides hedges against price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves.
+It provides hedges against price fluctuations and market crashes while being very easy to understand. This makes DCA a great fit for cryptocurrencies due to their high volatility. However, due to the complexities of time activated smart contracts, gas and MEV, automated DCA apps have been notably absent from DeFi. Using the results from this project I am hoping to add more focus on why and how badly DCA DeFi apps are needed. If DeFi hopes to become an accepted and standardized way for regular people to have more control over their savings/investments, they need more tools to empower them to make smart actions. I see a need for these apps and few advocating for the attention I feel this problem deserves. It is also fun to explore the data!
 
 ## Why ETH?
 Ethereum is how I got into the wonderful world of cryptocurrency and DeFi so it only felt natural to use it. However, I have constructed the code to make it very easy to collect data on other pairs. Simply change the API calls to the desired pair then call the strategies with the new data. In the future I plan to update the data collection code to accept coin names so that the results will automatically update for your desired pair.
@@ -25,7 +25,7 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
     - Run create_tables.ipynb with your data
 
 ###
-- See TODO.txt for a peak at what I am currently working on and have planned for the future.
+- See TODO.txt for a peek at what I am currently working on and have planned for the future.
 
 ### ETH Price Data is taken as the average of price from:
 - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
