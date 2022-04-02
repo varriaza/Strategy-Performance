@@ -132,3 +132,6 @@ I will be writing up two summary posts. Both will be uploaded freely to the inte
     - All credit goes to David-Woroniuk
 - A big thanks to the following kaggle dataset, CoinBase and Binance for the price data
     - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
+- Binance query taken from
+    - https://github.com/sammchardy/python-binance
+    - pip install python-binance
