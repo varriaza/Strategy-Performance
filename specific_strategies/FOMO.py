@@ -2,7 +2,7 @@
 FOMO (Moving Avg) strategy class.
 Buy when market is greedy, sell when it is fearful. Not expected to make money.
 Inherits base_strategy.
-Takes in how often you want to buy (in days) as an input. 
+Takes in how often you want to trade (in days) as an input. 
 Fear and Greed data is daily so this should be 1 day or greater.
 """
 from datetime import datetime, timezone
@@ -37,12 +37,13 @@ def display_time(seconds, granularity=1):
 
 class base_FOMO(bs.Strategy):
     """
-    Base FOMO (Moving Avg) strategy class.
+    Base FOMO strategy class. Specific strategies should just change the time_between_action variable.
+    Fear and Greed data is daily so this should be 1 day or greater and starts 02-01-2018
     """
     def __init__(self, starting_usd, time_between_action, price_period_name, price_df=pd.DataFrame(), starting_eth = 0, save_results = True, fear_and_greed_path='default'):
         self.buy_sell_period = display_time(time_between_action)
         super().__init__(
-            name=f'FOMO (Moving Avg) every {self.buy_sell_period}',
+            name=f'FOMO every {self.buy_sell_period}',
             starting_usd=starting_usd,
             time_between_action=time_between_action,
             price_period_name=price_period_name,
@@ -73,7 +74,7 @@ class base_FOMO(bs.Strategy):
         current_fng = self.fng_df['value'].loc[self.fng_df['date'] == current_date]
         if current_fng.empty:
             print(f'Current date: {current_date}')
-            raise ValueError('No Fear and Greed data for date found. Fear and greed data starts 02-01-2018')
+            raise LookupError('No Fear and Greed data for date found. Fear and greed data starts 02-01-2018')
         elif len(current_fng.index) > 1:
             raise ValueError('Somehow found more than one Fear and Greed value for a single day')
         else:

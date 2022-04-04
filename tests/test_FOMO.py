@@ -98,7 +98,7 @@ def test_out_of_FOMO_data():
     try:
         FOMO_strategy.run_logic()
         failed_as_expected = False
-    except ValueError:
+    except LookupError:
         failed_as_expected = True
     
     assert(failed_as_expected)
