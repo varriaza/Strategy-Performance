@@ -1,0 +1,7 @@
+index,FnG_value,value_classification,timestamp,fraction_price,decimal_price,fake_day
+0,80,Greed,1546300800,2000/1,2000.0,1
+1,80,Greed,1546300860,2000/1,2000.0,1
+2,52,Neutral,1546387200,2100/1,3000.0,2
+3,52,Neutral,1546387260,2100/1,3000.0,2
+4,20,Fear,1546473600,2000/1,4000.0,3
+5,20,Fear,1546473660,2000/1,4000.0,3

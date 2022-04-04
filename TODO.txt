@@ -3,16 +3,16 @@ TODO:
 [x] - Complete
 
 Short Term:
-[ ] Collect DCA data on all time periods
-[ ] Collect All in data on all time periods
-[ ] Collect All in Top and Bottom data on all time periods
+[x] Collect DCA data on all time periods
+[x] Collect All in data on all time periods
+[x] Collect All in Top and Bottom data on all time periods
+[ ] Create FOMO strategies (meant to lose money and act as a way to model an emotion based investor) 
+[ ] Create Buy and sell based on fear and greed (FnG) index
 [ ] Create ipynb file that analyses data with a write up in it comparing DCA vs All_in
 
 Medium Term:
 [ ] Create Log fit buy
 [ ] Create Log fit buy and sell 
-[ ] Create FOMO
-[ ] Create Buy and sell based on fear and greed index
 [ ] Create Combo of fear/greed and log fit
 [ ] Create Simple momentum buy and sell
 [ ] Create other strategies

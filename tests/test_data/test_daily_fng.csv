@@ -1,0 +1,4 @@
+index,value,value_classification,timestamp,date
+0,80,Greed,1546300800,01-01-2019
+1,52,Neutral,1546387200,01-02-2019
+2,20,Fear,1546473600,01-03-2019
