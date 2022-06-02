@@ -66,10 +66,13 @@ class Strategy:
         price_period_name,
         price_df = pd.DataFrame(),
         starting_eth = 0,
-        save_results = False
+        save_results = True,
+        save_balance_history = False
     ):
         # Save if we should save the results of this run (used to stop tests adding info)
         self.save_results = save_results
+        # See if we should save the history of all of the balances throughout the run
+        self.save_balance_history = save_balance_history
         # Name of the strategy
         self.name = name
         # Name of the price period given
@@ -452,7 +455,8 @@ class Strategy:
                 # Columns = values
             new_results_row(value_dict, table_name=self.name, row_name='Price Period', row_value=self.price_period_name)
 
-            # Save the returns history for use later
-            returns_history_file_name = f'{self.name}_{self.price_period_name}_returns_history.csv'
-            # save df as csv
-            self.returns_df.to_csv(returns_history_path(returns_history_file_name), index=False)
+            if self.save_balance_history:
+                # Save the returns history for use later
+                returns_history_file_name = f'{self.name}_{self.price_period_name}_returns_history.csv'
+                # save df as csv
+                self.returns_df.to_csv(returns_history_path(returns_history_file_name), index=False)
