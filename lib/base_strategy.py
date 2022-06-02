@@ -66,7 +66,7 @@ class Strategy:
         price_period_name,
         price_df = pd.DataFrame(),
         starting_eth = 0,
-        save_results = True
+        save_results = False
     ):
         # Save if we should save the results of this run (used to stop tests adding info)
         self.save_results = save_results
