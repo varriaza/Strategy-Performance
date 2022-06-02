@@ -5,7 +5,7 @@ Inherits base_strategy.
 Takes in how often you want to trade (in days) as an input. 
 Fear and Greed data is daily so this should be 1 day or greater.
 """
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import time
 import pandas as pd
 import lib.base_strategy as bs
@@ -69,11 +69,14 @@ class base_FOMO(bs.Strategy):
         This buy and sell logic was made up to simulate high volume swing trading.
         """
         # find FnG for current day
-        current_date = datetime.fromtimestamp(self.current_time, tz=timezone.utc).strftime('%m-%d-%Y')
+        current_date = (datetime.fromtimestamp(self.current_time, tz=timezone.utc)-timedelta(days=1)).strftime('%m-%d-%Y')
 
+        # NOTE: Subtract 1 day as we cannot use the current date's FnG data due to it using future data from that same day.
+        # EG, if the market dumps late in the day, the FnG may turn fearful which could impact our buy in the morning.
         current_fng = self.fng_df['value'].loc[self.fng_df['date'] == current_date]
+
         if current_fng.empty:
-            print(f'Current date: {current_date}')
+            print(f'Current date: {current_date}, Current timestamp: {self.current_time}')
             raise LookupError('No Fear and Greed data for date found. Fear and greed data starts 02-01-2018')
         elif len(current_fng.index) > 1:
             raise ValueError('Somehow found more than one Fear and Greed value for a single day')
@@ -118,8 +121,6 @@ class base_FOMO(bs.Strategy):
                 sell_amount = self.current_eth*self.current_price
             # sell
             if sell_amount > 0:
-                # print(f'Current eth in usd: ${bs.unfrac(self.current_eth * self.current_price)}')
-                # print(f'sell amount: ${sell_amount}')
                 self.sell_eth(usd_eth_to_sell=sell_amount)
         # return nothing
 

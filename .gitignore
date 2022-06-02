@@ -6,6 +6,7 @@ testing.ipynb
 api_data.py
 strategy_performance-workspace*
 returns_history*
+results/Save_results*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
