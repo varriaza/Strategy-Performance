@@ -1,0 +1,3 @@
+Strategy,Price_Period,Price Delta,% Price Delta,Starting USD,Starting ETH,Ending USD,Ending ETH,Total Value in USD,Total Value % Increase,Returns in USD,Mean Annual % Return,Median Annual % Return,Final Annual % Return,Median-Mean % Return,Trades Made,Fees Paid,Flat Return Per Trade,% Return Per Trade,Sharpe of Returns,Sortino of Returns,Std of Price
+DCA every 1.0 hour,2022_price_data.csv,-1919.3425,48.2828,10000.0,0.0,0.0,3.4208,6129.5936,,-3870.4064,-62.8276,-61.3919,-89.2673,1.4356,3801,30.0,-1.0183,-0.0235,-0.4571,-0.4464,493.64
+DCA every 1 day,2022_price_data.csv,-1919.3425,48.2828,10000.0,0.0,0.0,3.4239,6135.2816,-38.6472,-3864.7184,-62.3911,-61.006,-89.1361,1.3851,159,30.0,-24.3064,-0.5606,-0.4545,-0.4436,493.64

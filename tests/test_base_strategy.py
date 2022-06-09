@@ -725,6 +725,10 @@ def test_add_data_to_results():
             'Ending ETH': bs.unfrac(testing_strat.current_eth),
             # Final total value in USD (USD + ETH)
             'Total Value in USD': bs.unfrac(testing_strat.get_total_value()),
+            # Total # increase in USD
+            'Total Value % Increase': bs.unfrac(
+                (testing_strat.get_total_value()-testing_strat.starting_total_value)*100/testing_strat.starting_total_value
+            ),
             # - Total ending value in USD (aka ending ETH+USD)
             'Returns in USD': bs.unfrac(frac(100)+final_price-frac(100)),
             # Mean Annual % Return (aka average)
@@ -812,6 +816,9 @@ def test_add_data_new_row():
         'Strategy':['Testing'], 'Price_Period':testing_strat.price_period_name, 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
         'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Total Value % Increase': bs.unfrac(
+            (testing_strat.get_total_value()-testing_strat.starting_total_value)*100/testing_strat.starting_total_value
+        ),
         'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
@@ -888,6 +895,9 @@ def test_add_data_update_row():
         'Strategy':['Testing'], 'Price_Period':testing_strat.price_period_name, 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
         'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
+        'Total Value % Increase': bs.unfrac(
+            (testing_strat.get_total_value()-testing_strat.starting_total_value)*100/testing_strat.starting_total_value
+        ),
         'Returns in USD': [13.3366],
         'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
         'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],

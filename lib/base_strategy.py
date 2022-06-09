@@ -420,6 +420,8 @@ class Strategy:
             'Ending ETH': unfrac(self.current_eth),
             # Final total value in USD (USD + ETH)
             'Total Value in USD': unfrac(self.get_total_value()),
+            # Total # increase in USD
+            'Total Value % Increase': unfrac((self.get_total_value()-self.starting_total_value)*100/self.starting_total_value),
             # - Total ending value in USD (aka ending ETH+USD-starting_usd-starting_eth)
             'Returns in USD': unfrac(self.get_total_value()-self.starting_total_value),
             # Mean Annual % Return (aka average)
