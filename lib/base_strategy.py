@@ -2,7 +2,6 @@
 Base strategy class.
 Gets inherited by specific strategies.
 """
-from ast import Raise
 from fractions import Fraction as frac
 import pandas as pd
 
@@ -41,13 +40,6 @@ def results_path(csv):
     if csv[-4:] != '.csv':
         csv = csv + '.csv'
     return f'results\\{csv}'
-
-def strategy_results_path(csv):
-    """Path to strategy results csv files."""
-    # Make sure we have the file ending
-    if csv[-4:] != '.csv':
-        csv = csv + '.csv'
-    return f'results\\strategies\\{csv}'
 
 def period_path(csv):
     """Path to price_period csv files."""
