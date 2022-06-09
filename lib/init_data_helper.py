@@ -121,8 +121,7 @@ def create_price_period(start, end, name, csv='Combined_ETH_all_price_data.csv')
         start = int(time.mktime(datetime.datetime.strptime(start, "%m/%d/%Y").timetuple()))
     if not isinstance(end, int):
         end = int(time.mktime(datetime.datetime.strptime(end, "%m/%d/%Y").timetuple()))
-    print(f'Start timestamp: {start}')
-    print(f'End timestamp: {end}')
+    print(f'Start timestamp: {start} | End timestamp: {end}')
     new_df = pd.DataFrame(columns=['timestamp'])
 
     # read data in
@@ -136,9 +135,16 @@ def create_price_period(start, end, name, csv='Combined_ETH_all_price_data.csv')
         ], ignore_index=True
     )
 
+    if data['timestamp'].values[-1] < end:
+        print(f'WARNING! - End of current price data reached: {data["timestamp"].values[-1]}')
+        print(f'Ending timestamp given: {end}! Script will continue, just using all available data.')
+
     # Rename the actual index to 'index'
     new_df.index.names = ['index']
 
     # Save df as csv
     if not new_df.empty:
         new_df.to_csv(bs.period_path(name+'.csv'))
+
+    # Pretty spacing
+    print('\n')

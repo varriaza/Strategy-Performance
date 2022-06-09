@@ -53,7 +53,7 @@ def compare_dicts(dict1, dict2):
     if dict1 != dict2:
         # Do a symmetric diff to find values that don't match
         sorted_values = sorted(set1^set2)
-        # Print the values sorted and nicely for debuging
+        # Print the values sorted and nicely for debugging
         for value in sorted_values:
             print(value)
             print(f'var type: {type(value[1])}')
@@ -63,18 +63,30 @@ def compare_dicts(dict1, dict2):
 def delete_test_files():
     """
     Make sure that there are no extra result files BEFORE and after we start the tests.
+    Also remove any rows added to 'Overall_Results.csv' that contain 'test' as a strategy or price_period.
     """
     price_period_name = 'test'
+    name = 'Testing'
     try:
-        os.remove(bs.price_period_results_path(price_period_name))
+        # Read in Overall_results.csv
+        all_results = pd.read_csv(bs.results_path('Overall_Results'))
+        # Drop rows that have the strategy_name as 'Testing'
+        all_results = all_results[all_results['Strategy']!=name]
+        # Drop rows that have the price_period as 'test'
+        all_results = all_results[all_results['Price_Period']!=price_period_name]
+        # Delete the original csv so that we can save a new one
+        os.remove(bs.results_path('Overall_Results'))
+        # Save new csv with same name as original
+        # Rename index so we can call it easily
+        all_results.index.names = ['index']
+
+        # Sort rows first by 'Strategy' and then by 'Price_Period'
+        all_results.sort_values(by=['Strategy', 'Price_Period'])
+        # save df as csv
+        all_results.to_csv(bs.results_path('Overall_Results'), index=False)
     except FileNotFoundError:
         pass
 
-    name = 'Testing'
-    try:
-        os.remove(bs.strategy_results_path(name))
-    except FileNotFoundError:
-        pass
 
     returns_history = f'{name}_{price_period_name}_returns_history.csv'
     try:
@@ -226,7 +238,7 @@ def test_go_to_next_action():
     old_total = testing_strat.get_total_value()
     start_time = testing_strat.start_time
 
-    # Make sure we are at the beggining
+    # Make sure we are at the beginning
     assert start_time == testing_strat.current_time
 
     # Step forward twice in time as returns_df is in the past by 1 index
@@ -324,7 +336,7 @@ def test_go_to_next_action_big_skip():
     old_index = testing_strat.current_index
     start_time = testing_strat.start_time
 
-    # Make sure we are at the beggining
+    # Make sure we are at the beginning
     assert start_time == testing_strat.current_time
 
     # Step forward in time
@@ -348,7 +360,7 @@ def test_go_to_next_action_big_skip():
     # Test that index updates
     assert old_index == 0
     assert testing_strat.current_index == 27
-    # Test that retruns_df updates
+    # Test that returns_df updates
     expected_returns_df = pd.DataFrame({
         'timestamp': [price_df['timestamp'].iloc[26]],
         'fraction_price': [price_df['fraction_price'].iloc[26]],
@@ -795,9 +807,9 @@ def test_add_data_new_row():
     # Call the data consolidation
     testing_strat.add_data_to_results()
 
-    # test price_periods
-    price_periods_expected_row = pd.DataFrame({
-        'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
+    # test our final expected row
+    expected_row = pd.DataFrame({
+        'Strategy':['Testing'], 'Price_Period':testing_strat.price_period_name, 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
         'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
         'Returns in USD': [13.3366],
@@ -818,35 +830,12 @@ def test_add_data_new_row():
         'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
     })
     # Open resulting file and see if the row was added as expected
-    real_price_periods_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name))
-    assert compare_df(price_periods_expected_row.reset_index(drop=True), real_price_periods_data.reset_index(drop=True))
-
-    # test strategy
-    strategy_expected_row = pd.DataFrame({
-        'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
-        'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
-        'Returns in USD': [13.3366],
-        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
-        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
-        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
-        'Median-Mean % Return': [round(
-            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
-            4
-        )],
-        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
-        'Flat Return Per Trade': [
-            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
-        ],
-        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
-        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
-        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
-    })
-    # Open resulting file and see if the row was added as expected
-    real_strategy_data = pd.read_csv(bs.strategy_results_path(testing_strat.name))
-    assert compare_df(strategy_expected_row.reset_index(drop=True), real_strategy_data.reset_index(drop=True))
-
+    real_price_period_data = pd.read_csv(bs.results_path('Overall_Results'))
+    real_price_period_data = real_price_period_data.loc[
+        (real_price_period_data['Strategy']==name) &
+        (real_price_period_data['Price_Period']==testing_strat.price_period_name)
+    ]
+    assert compare_df(expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
 
 def test_add_data_update_row():
     """
@@ -895,29 +884,8 @@ def test_add_data_update_row():
     testing_strat.add_data_to_results()
 
     # define expected values
-    price_periods_expected_row = pd.DataFrame({
-        'Strategy':['Testing'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
-        'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
-        'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
-        'Returns in USD': [13.3366],
-        'Mean Annual % Return': [round(testing_strat.returns_df['% Return'].mean(), 4)],
-        'Median Annual % Return': [round(testing_strat.returns_df['% Return'].median(), 4)],
-        'Final Annual % Return': [bs.unfrac(testing_strat.get_returns())],
-        'Median-Mean % Return': [round(
-            testing_strat.returns_df['% Return'].median()-testing_strat.returns_df['% Return'].mean(),
-            4
-        )],
-        'Trades Made': [testing_strat.trades_made], 'Fees Paid': [40*.003],
-        'Flat Return Per Trade': [
-            bs.unfrac((testing_strat.get_total_value()-testing_strat.starting_total_value)/testing_strat.trades_made)
-        ],
-        '% Return Per Trade': [bs.unfrac(testing_strat.get_returns()/testing_strat.trades_made)],
-        'Sharpe of Returns': [testing_strat.sharpe_ratio_of_returns()],
-        'Sortino of Returns': [testing_strat.sortino_ratio_of_returns()],
-        'Std of Price': [round(testing_strat.price_df['decimal_price'].std(), 2)]
-    })
-    strategy_expected_row = pd.DataFrame({
-        'Price Period':['test'], 'Price Delta': [252.2356], '% Price Delta': [133.3963],
+    overall_expected_row = pd.DataFrame({
+        'Strategy':['Testing'], 'Price_Period':testing_strat.price_period_name, 'Price Delta': [252.2356], '% Price Delta': [133.3963],
         'Starting USD': [100.0], 'Starting ETH': [0.0], 'Ending USD': [60.0],
         'Ending ETH': [0.0529], 'Total Value in USD': [bs.unfrac(testing_strat.get_total_value())],
         'Returns in USD': [13.3366],
@@ -939,19 +907,13 @@ def test_add_data_update_row():
     })
 
     # Open resulting file and see if the row was added as expected
-    real_price_period_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name))
-    # real_data = pd.read_csv(bs.price_period_results_path(testing_strat.price_period_name), index_col='index')
-    assert compare_df(price_periods_expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
-    # Delete file when finished
-    os.remove(bs.price_period_results_path(testing_strat.price_period_name))
+    real_price_period_data = pd.read_csv(bs.results_path('Overall_Results'))
+    real_price_period_data = real_price_period_data.loc[
+        (real_price_period_data['Strategy']==name) &
+        (real_price_period_data['Price_Period']==testing_strat.price_period_name)
+    ]
+    assert compare_df(overall_expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
 
-    # Now for for strategy
-    real_strategy_data = pd.read_csv(bs.strategy_results_path(testing_strat.name))
-    assert compare_df(
-        strategy_expected_row.reset_index(drop=True),
-        real_strategy_data.reset_index(drop=True)
-    )
-    os.remove(bs.strategy_results_path(testing_strat.name))
 
 def test_returns_history():
     """
