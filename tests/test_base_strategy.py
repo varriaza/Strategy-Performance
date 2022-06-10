@@ -7,6 +7,7 @@ import pytest as pt
 import pandas as pd
 from test_all_tests import get_test_data_path
 import lib.base_strategy as bs
+import numpy
 
 def compare(value1, value2):
     """
@@ -21,28 +22,29 @@ def compare_df(df1, df2):
     """
     Helpful testing function that prints values if there are a mismatch.
     """
-    if not df1.equals(df2):
+    is_equal = df1.equals(df2)
+    if not is_equal:
         print('df1:')
         print(df1.to_string())
         # print(df1.shape)
         # print(df1.values[-1])
-        # for i in df1:
-        #     print(f"{i}'s type: {type(df1[i].values[0])}")
+        for i in df1:
+            print(f"{i}'s type: {type(df1[i].values[0])}")
         print('---')
         print('df2:')
         print(df2.to_string())
         # print(df2.shape)
         # print(df2.values[-1])
-        # for i in df2:
-        #     print(f"{i}'s type: {type(df2[i].values[0])}")
-        # print('---')
+        for i in df2:
+            print(f"{i}'s type: {type(df2[i].values[0])}")
+        print('---')
 
         print(df1.where(df1.values!=df2.values).notna().to_string())
         # values_not_equal = df1.values!=df2.values
         # print(f'values_not_equal:\n{values_not_equal}')
         # print(df1.loc[values_not_equal].notna())
 
-    return df1.equals(df2)
+    return is_equal
 
 def compare_dicts(dict1, dict2):
     """
@@ -753,7 +755,7 @@ def test_add_data_to_results():
             # - Risk vs Rewards of returns (Sharpe Ratio)
             'Sharpe of Returns': testing_strat.sharpe_ratio_of_returns(),
             # - (Negative) Risk vs Rewards of returns (Sortino Ratio)
-            'Sortino of Returns': 'undefined', # we have no negative returns for this testing price_period
+            'Sortino of Returns': None, # we have no negative returns for this testing price_period
             # - Volatility of price for time period (standard deviation)
             'Std of Price': round(testing_strat.price_df['decimal_price'].std(), 2)
     }
@@ -782,12 +784,6 @@ def test_add_data_new_row():
         price_period_name=price_period_name,
         price_df=price_df
     )
-
-    try:
-        # make sure we don't start with a file already generated from previous tests
-        os.remove(bs.price_period_results_path(testing_strat.price_period_name))
-    except FileNotFoundError:
-        pass
 
     # Start with an initial buy
     testing_strat.buy_eth(usd_eth_to_buy=10)
@@ -842,6 +838,8 @@ def test_add_data_new_row():
         (real_price_period_data['Strategy']==name) &
         (real_price_period_data['Price_Period']==testing_strat.price_period_name)
     ]
+    # Make the Sortino value a numpy.float64 as the 'None' values cause the read_csv to read the values in as strings
+    real_price_period_data['Sortino of Returns'] = real_price_period_data['Sortino of Returns'].astype(numpy.float64)
     assert compare_df(expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
 
 def test_add_data_update_row():
@@ -922,6 +920,8 @@ def test_add_data_update_row():
         (real_price_period_data['Strategy']==name) &
         (real_price_period_data['Price_Period']==testing_strat.price_period_name)
     ]
+    # Make the Sortino value a numpy.float64 as the 'None' values cause the read_csv to read the values in as strings
+    real_price_period_data['Sortino of Returns'] = real_price_period_data['Sortino of Returns'].astype(numpy.float64)
     assert compare_df(overall_expected_row.reset_index(drop=True), real_price_period_data.reset_index(drop=True))
 
 
