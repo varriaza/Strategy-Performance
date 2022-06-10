@@ -20,13 +20,6 @@ def unfrac(fraction, round_to=4):
     # float_num = round(numerator/denominator, round_to)
     return float_num
 
-def price_period_results_path(csv):
-    """Path to price_periods results csv files."""
-    # Make sure we have the file ending
-    if csv[-4:] != '.csv':
-        csv = csv + '.csv'
-    return f'results\\price_periods\\{csv}'
-
 def returns_history_path(csv):
     """Path to returns_history results csv files."""
     # Make sure we have the file ending
@@ -213,7 +206,7 @@ class Strategy:
         # If we have all the same return, like 0, then the std is 0.
         # This makes the sharpe ratio undefined due to dividing by zero
         if pd.isna(sigma) or sigma == 0:
-            return 'undefined'
+            return None
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
     def sortino_ratio_of_returns(self):
@@ -237,7 +230,7 @@ class Strategy:
         sigma = (self.returns_df['% Return'].loc[self.returns_df['% Return'] < 0]/100).std()
         # If we have no negative returns, the sortino ratio is undefined due to dividing by zero
         if pd.isna(sigma) or sigma == 0:
-            return 'undefined'
+            return None
         return round((average_annual_expected_return-annual_risk_free_return)/sigma, 4)
 
     def buy_eth(self, usd_eth_to_buy=0, eth_to_buy=0,):
@@ -309,53 +302,6 @@ class Strategy:
         """
         Calculates the following values and adds them to csv's in the results folder
         """
-        def new_results_row(value_dict, table_name):
-            """
-            Performs the specific logic to update/create a results table.
-            Used for both 'Strategy' tables and 'Time Period' tables.
-            """
-            path_to_results = results_path(table_name)
-
-            # Price_period results update
-            name_and_price_period_row = {
-                'Strategy': self.name,
-                'Price_Period': self.price_period_name
-            }
-            name_and_price_period_row.update(value_dict)
-            price_period_columns = list(name_and_price_period_row.keys())
-            # turn dictionary into dataframe
-            name_and_price_period_row = pd.DataFrame(name_and_price_period_row, index=[0], columns=price_period_columns)
-
-            # Check if csv file with price period name exists in results/price_periods
-            try:
-                # If it exists, read it in
-                price_period_df = pd.read_csv(path_to_results)
-            except FileNotFoundError:
-                # If not, create it. Name = time period name
-                price_period_df = pd.DataFrame(columns=price_period_columns)
-
-            # Check if the strategy-Price_Period combo already has a row
-            if not price_period_df.empty:
-                # Look for if there is a row with the Strategy and Price_period already
-                existing_row = price_period_df.loc[
-                    (price_period_df['Strategy']==self.name) & 
-                    (price_period_df['Price_Period']==self.price_period_name)
-                ]
-                if not existing_row.empty:
-                    drop_index = existing_row.index[0]
-                    price_period_df = price_period_df.drop([drop_index])
-
-            # No matter what we will want to add the row
-            price_period_df = price_period_df.append(name_and_price_period_row)
-            # Rename index so we can call it easily
-            price_period_df.index.names = ['index']
-
-            # Sort rows first by 'Strategy' and then by 'Price_Period'
-            price_period_df.sort_values(by=['Strategy', 'Price_Period'])
-            # save df as csv
-            price_period_df.to_csv(path_to_results, index=False)
-            # END of function
-            
         # Raise an error if we didn't make any trades
         if self.trades_made == 0:
             raise ValueError('Error: No trades were made! Double check your strategy.')
@@ -448,18 +394,47 @@ class Strategy:
 
         # See if we need to save the results
         if self.save_results:
-            # # Add values to price_period df, or update row if it exists
-            #     # Rows = strategy
-            #     # Columns = values
-            # new_results_row(value_dict, table_name=self.price_period_name, row_name='Strategy', row_value=self.name)
-
-            # # Add values to strategy df, or update row if it exists
-            #     # Rows = price periods
-            #     # Columns = values
-            # new_results_row(value_dict, table_name=self.name, row_name='Price Period', row_value=self.price_period_name)
-
             # Add values to returns df or update row if it exists
-            new_results_row(value_dict, table_name='Overall_Results')
+            
+            # Price_period results update
+            name_and_price_period_row = {
+                'Strategy': self.name,
+                'Price_Period': self.price_period_name
+            }
+            name_and_price_period_row.update(value_dict)
+            price_period_columns = list(name_and_price_period_row.keys())
+            # turn dictionary into dataframe
+            name_and_price_period_row = pd.DataFrame(name_and_price_period_row, index=[0], columns=price_period_columns)
+
+            # Check if csv file with price period name exists in results/price_periods
+            path_to_results = results_path('Overall_Results')
+            try:
+                # If it exists, read it in
+                price_period_df = pd.read_csv(path_to_results)
+            except FileNotFoundError:
+                # If not, create it. Name = time period name
+                price_period_df = pd.DataFrame(columns=price_period_columns)
+
+            # Check if the strategy-Price_Period combo already has a row
+            if not price_period_df.empty:
+                # Look for if there is a row with the Strategy and Price_period already
+                existing_row = price_period_df.loc[
+                    (price_period_df['Strategy']==self.name) & 
+                    (price_period_df['Price_Period']==self.price_period_name)
+                ]
+                if not existing_row.empty:
+                    drop_index = existing_row.index[0]
+                    price_period_df = price_period_df.drop([drop_index])
+
+            # No matter what we will want to add the row
+            price_period_df = price_period_df.append(name_and_price_period_row)
+            # Rename index so we can call it easily
+            price_period_df.index.names = ['index']
+
+            # Sort rows first by 'Strategy' and then by 'Price_Period'
+            price_period_df.sort_values(by=['Strategy', 'Price_Period'])
+            # save df as csv
+            price_period_df.to_csv(path_to_results, index=False)
 
             if self.save_balance_history:
                 # Save the returns history for use later
