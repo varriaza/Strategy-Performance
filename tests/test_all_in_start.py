@@ -4,10 +4,10 @@ Testing for the base all_in strategy class
 import pytest as pt
 import pandas as pd
 import lib.base_strategy as bs
-from specific_strategies import all_in
+from specific_strategies import all_in_start
 from test_all_tests import get_test_data_path
 
-def test_all_in():
+def test_all_in_start():
     """
     Test that buying right away returns expected results
     """
@@ -20,7 +20,7 @@ def test_all_in():
     # Turns days into seconds
     days = days*seconds_in_a_day
     price_df = pd.read_csv(get_test_data_path('test'))
-    all_in_strategy = all_in.base_all_in(
+    all_in_strategy = all_in_start.base_all_in(
         starting_usd=starting_usd,
         time_between_action=days,
         price_period_name='test',

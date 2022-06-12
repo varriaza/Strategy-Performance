@@ -13,7 +13,7 @@ class base_all_in(bs.Strategy):
     """
     def __init__(self, starting_usd, time_between_action, price_period_name, price_df=pd.DataFrame(), starting_eth = 0, save_results = True):
         super().__init__(
-            name='All in',
+            name='All in start',
             starting_usd=starting_usd,
             time_between_action=time_between_action,
             price_period_name=price_period_name,
