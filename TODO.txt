@@ -1,16 +1,16 @@
 TODO:
-[ ] - WIP
-[x] - Complete
+[x] - Complete (Will be removed)
+[WIP] - Currently working on
+[ ] - For the future
 
 Short Term:
-[x] Collect DCA data on all time periods
-[x] Collect All in data on all time periods
-[x] Collect All in Top and Bottom data on all time periods
-[ ] Create FOMO strategies (meant to lose money and act as a way to model an emotion based investor) 
-[ ] Create Buy and sell based on fear and greed (FnG) index
-[ ] Create ipynb file that analyses data with a write up in it comparing DCA vs All_in
+[WIP] Create ipynb file that analyses data/creates graphs
+[WIP] Write up my findings from comparing DCA strategies (especially 1 hour vs 1 month) 
 
 Medium Term:
+[WIP] Create FOMO strategies (meant to lose money and act as a way to model a highly emotional investor) 
+[WIP] Create Buy and sell based on fear and greed (FnG) index (meant to make money)
+[ ] Write about comparing fear and greed investing to DCA
 [ ] Create Log fit buy
 [ ] Create Log fit buy and sell 
 [ ] Create Combo of fear/greed and log fit
@@ -19,6 +19,7 @@ Medium Term:
 [ ] Crete data analysis of these new strategies
 
 Long Term:
+[ ] Look into how to exit a position, does DCA help here? Are there better DCA alternatives?
 [ ] Add more exchange data sources
 [ ] Update the code to accept coin names so that the results will automatically update for your desired pair
 [ ] Create Neural Network/ML strategies
