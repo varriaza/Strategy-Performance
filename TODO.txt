@@ -5,21 +5,23 @@ TODO:
 
 Short Term:
 [WIP] Create ipynb file that analyses data/creates graphs
+    [WIP] Create a graph with ETH price and total value vs time for each strategy/price_period 
+    [WIP] Create a graph with number of trades, sortino value, ending total value and sortino/ending_value (used to show risk/volatility) for each strategy in a given price_period 
 [WIP] Write up my findings from comparing DCA strategies (especially 1 hour vs 1 month) 
 
 Medium Term:
 [WIP] Create FOMO strategies (meant to lose money and act as a way to model a highly emotional investor) 
 [WIP] Create Buy and sell based on fear and greed (FnG) index (meant to make money)
+[ ] Add NUPL (Net Unrealized Profit and Loss) as an alternative way to measure fear/greed (high profit = high greed)
 [ ] Write about comparing fear and greed investing to DCA
-[ ] Create Log fit buy
-[ ] Create Log fit buy and sell 
-[ ] Create Combo of fear/greed and log fit
-[ ] Create Simple momentum buy and sell
-[ ] Create other strategies
-[ ] Crete data analysis of these new strategies
 
 Long Term:
+[ ] Create other strategies
+    [ ] Create Log fit buy
+    [ ] Create Log fit buy and sell 
+    [ ] Create Combo of fear/greed and log fit
+    [ ] Create Simple momentum buy and sell
+[ ] Create data analysis of these new strategies
 [ ] Look into how to exit a position, does DCA help here? Are there better DCA alternatives?
-[ ] Add more exchange data sources
-[ ] Update the code to accept coin names so that the results will automatically update for your desired pair
+[ ] Update the code to accept coin names so that the results will automatically update for the desired pair
 [ ] Create Neural Network/ML strategies
