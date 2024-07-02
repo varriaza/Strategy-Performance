@@ -1,11 +1,14 @@
 # Strategy-Performance
+## Link to results write-up
+[Everyone Asks Why DCA but Nobody Asks How to DCA? - An analysis of how to DCA best](https://github.com/varriaza/Strategy-Performance/wiki/Everyone-Asks-%22Why-DCA%22-but-Nobody-Asks-%22How-to-DCA%3F%22-%E2%80%90-An-analysis-of-how-to-DCA-best)
+  
 ## What is this project about?
 I am looking to compare how different trading strategies for ETH-USD have behaved over different time periods, with a focus on dollar cost averaging. 
 
 ## My reason for making this
 Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regular people looking to start investing in the stock market. It provides hedges against downward price fluctuations while being very easy to understand. This volatility buffer seemed perfect for crypto and made me wonder, "does it make a difference to DCA once an 1 hour vs once a month"? Given the high volatility in crypto I figured the shorter time between DCA buys would give better returns. This project is designed to test that hypothesis and satisfy my curiosity.
 
-## Code Summary:
+## Code summary:
 - Data is collected from kaggle, CoinBase, Binance and etc.
     - Created in '.init_data.ipynb'
 - Datasets for price_periods are created (ETH-USD price over a given time period, basically a subset of historical data)
@@ -24,7 +27,7 @@ Dollar Cost Averaging (DCA) is widely regarded as the golden standard for regula
 - Analyze and write up summary of the data/plots in TBD.txt
 - See TODO.txt for what I am currently working on and what I plan to make in the future.
 
-#### ETH Price Data is taken as the average of price from:
+#### ETH price data is taken as the average of price from:
 - https://www.kaggle.com/yamqwe/cryptocurrency-extra-data-ethereum
 - Binance API
 - CoinBase Pro API
@@ -57,7 +60,7 @@ Price data is taken every minute, which should be a good enough approximation fo
     - 1515870180 (2018) to 1620125000 (before 2021 crash)
     - 1620125000 (before 2021 crash) to end of 2021
 
-## References and Acknowledgments
+## References and acknowledgments
 - HistoricalData.py is taken from: https://github.com/David-Woroniuk/Historic_Crypto/blob/main/HistoricalData.py
     - I did very minor edits, mostly to remove print statements
     - All credit goes to David-Woroniuk
